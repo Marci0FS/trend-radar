@@ -64,3 +64,24 @@ def test_extract_phrases_does_not_merge_non_adjacent_chunks():
     assert "beautiful boxes" in counts
     # They should not be merged into a single long phrase
     assert "colorful bags inside beautiful boxes" not in counts
+
+
+def test_extract_phrases_merges_three_adjacent_noun_chunks():
+    """Test that 3+ adjacent noun chunks are all merged into a single phrase.
+
+    Verifies that the merge algorithm correctly handles chains of multiple
+    adjacent chunks, not just pairs. spaCy's parsing of "Through black door
+    white door green door" creates three adjacent noun chunks that should
+    all merge into one phrase.
+    """
+    titles = [
+        "Through black door white door green door",
+    ]
+    counts = extract_phrases(titles)
+    # All three adjacent chunks should merge into one phrase
+    assert "black door white door green door" in counts
+    assert counts["black door white door green door"] == 1
+    # Individual chunks should not be counted separately
+    assert "black door" not in counts
+    assert "white door" not in counts
+    assert "green door" not in counts
