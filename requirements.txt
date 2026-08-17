@@ -1,3 +1,5 @@
 pytrends
 praw
 PyYAML
+spacy
+pytest

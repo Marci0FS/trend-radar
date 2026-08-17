@@ -84,3 +84,32 @@ def insert_signal(
          json.dumps(details, ensure_ascii=False)),
     )
     conn.commit()
+
+
+def insert_phrase_mentions(conn: sqlite3.Connection, mentions: list[dict]) -> None:
+    conn.executemany(
+        """INSERT INTO phrase_mentions (phrase, subreddit, mention_count, window_start, window_end)
+           VALUES (?, ?, ?, ?, ?)""",
+        [
+            (m["phrase"], m["subreddit"], m["mention_count"], m["window_start"], m["window_end"])
+            for m in mentions
+        ],
+    )
+    conn.commit()
+
+
+def get_distinct_phrases(conn: sqlite3.Connection) -> list[str]:
+    rows = conn.execute("SELECT DISTINCT phrase FROM phrase_mentions").fetchall()
+    return [r["phrase"] for r in rows]
+
+
+def get_phrase_mention_series(conn: sqlite3.Connection, phrase: str) -> list[tuple[str, int]]:
+    rows = conn.execute(
+        """SELECT window_start, SUM(mention_count) as total
+           FROM phrase_mentions
+           WHERE phrase = ?
+           GROUP BY window_start
+           ORDER BY window_start""",
+        (phrase,),
+    ).fetchall()
+    return [(r["window_start"], r["total"]) for r in rows]
