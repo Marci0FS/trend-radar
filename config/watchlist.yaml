@@ -5,17 +5,50 @@
 categories:
   gadgets:
     keywords:
-      - "led face mask"
-      - "posture corrector"
+      - "purificateur d'air portable"
+      - "mini projecteur"
+      - "montre connectee sante"
+      - "chargeur solaire portable"
     subreddits:
       - gadgets
       - shutupandtakemymoney
-  home:
+  beaute:
     keywords:
-      - "air purifier plant"
+      - "masque LED visage"
+      - "brosse a dents electrique sonique"
+      - "huile de ricin cheveux"
+    subreddits:
+      - SkincareAddiction
+      - beauty
+  maison:
+    keywords:
+      - "lampe de sel himalayen"
+      - "diffuseur huiles essentielles"
+      - "robot aspirateur laveur"
     subreddits:
       - BuyItForLife
       - HomeImprovement
+  fitness:
+    keywords:
+      - "ceinture de sudation"
+      - "corde a sauter connectee"
+    subreddits:
+      - fitness
+      - xxfitness
+  animaux:
+    keywords:
+      - "fontaine a eau chat"
+      - "GPS collier chien"
+    subreddits:
+      - cats
+      - dogs
+  enfants:
+    keywords:
+      - "veilleuse projecteur enfant"
+      - "tapis puzzle bebe"
+    subreddits:
+      - Mommit
+      - beyondthebump
 
 # Fenetre Google Trends (format pytrends, ex: "today 3-m", "today 12-m")
 trends_timeframe: "today 3-m"

@@ -7,6 +7,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import time
 from pathlib import Path
 
 import yaml
@@ -74,6 +75,7 @@ def cmd_scan(watchlist: dict) -> None:
                 geo=watchlist.get("trends_geo", "FR"),
             )
             db.insert_trends_snapshots(conn, keyword_id, trends_data, watchlist.get("trends_geo", "FR"))
+            time.sleep(2)  # limite le risque de 429 pytrends sur un scan a beaucoup de mots-cles
 
             if reddit_client:
                 posts = reddit_collector.search_keyword(
