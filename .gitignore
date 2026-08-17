@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+.env
+data/*.db
+data/*.db-journal
+data/report.md
+.DS_Store
+node_modules/
+.vercel/
