@@ -16,7 +16,7 @@ def is_duplicate(yaml_text: str, phrase: str, category: str) -> bool:
     cat = categories.get(category)
     if not cat:
         return False
-    return phrase in cat.get("keywords", [])
+    return phrase in (cat.get("keywords") or [])
 
 
 def add_keyword_to_yaml_text(yaml_text: str, phrase: str, category: str) -> str:
