@@ -103,6 +103,20 @@ def get_distinct_phrases(conn: sqlite3.Connection) -> list[str]:
     return [r["phrase"] for r in rows]
 
 
+def get_phrases_in_window(conn: sqlite3.Connection, window_start: str) -> list[str]:
+    """Phrases mentionnees dans une fenetre (run de scan) donnee.
+
+    Utilise par find_candidates pour borner sa recherche aux phrases vues
+    lors du run courant, plutot que d'iterer sur toutes les phrases jamais
+    enregistrees (requete non bornee, de plus en plus couteuse au fil du temps).
+    """
+    rows = conn.execute(
+        "SELECT DISTINCT phrase FROM phrase_mentions WHERE window_start = ?",
+        (window_start,),
+    ).fetchall()
+    return [r["phrase"] for r in rows]
+
+
 def get_phrase_mention_series(conn: sqlite3.Connection, phrase: str) -> list[tuple[str, int]]:
     rows = conn.execute(
         """SELECT window_start, SUM(mention_count) as total

@@ -13,8 +13,6 @@ Non-adjacent chunks (separated by other tokens) remain independent.
 """
 from __future__ import annotations
 
-import spacy
-
 _NLP = None
 
 MIN_PHRASE_LENGTH = 4
@@ -30,6 +28,8 @@ LEADING_DETERMINERS = ("a ", "an ", "the ", "my ", "this ", "these ", "those ", 
 def _get_nlp():
     global _NLP
     if _NLP is None:
+        import spacy  # import differe : `check`/`scan` ne doivent pas payer ce cout ni cette dependance
+
         try:
             _NLP = spacy.load("en_core_web_sm")
         except OSError as exc:
@@ -37,6 +37,16 @@ def _get_nlp():
                 "Modele spaCy manquant. Installer avec : python -m spacy download en_core_web_sm"
             ) from exc
     return _NLP
+
+
+def ensure_model() -> None:
+    """Force le chargement du modele spaCy (ou leve RuntimeError s'il manque).
+
+    A appeler avant toute operation couteuse (ex: scan Reddit complet) pour
+    echouer vite si le modele n'est pas installe, plutot que de le decouvrir
+    apres avoir deja consomme le budget d'appels Reddit.
+    """
+    _get_nlp()
 
 
 def _normalize(phrase: str) -> str:

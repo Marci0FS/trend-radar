@@ -126,29 +126,38 @@ def cmd_discover(watchlist: dict) -> None:
         conn.close()
         return
 
-    print(f"Discovery : scan de {len(subreddits)} subreddits...")
-    posts = reddit_scan.scan_subreddits(reddit_client, subreddits, post_limit=post_limit)
+    try:
+        # Echoue vite si le modele spaCy manque, avant de consommer le budget
+        # d'appels Reddit sur un scan complet (voir discovery.extract.ensure_model).
+        extract.ensure_model()
 
-    titles_by_subreddit: dict[str, list[str]] = {}
-    for p in posts:
-        titles_by_subreddit.setdefault(p["subreddit"], []).append(p["title"])
+        print(f"Discovery : scan de {len(subreddits)} subreddits...")
+        posts = reddit_scan.scan_subreddits(reddit_client, subreddits, post_limit=post_limit)
 
-    now = datetime.now(timezone.utc).isoformat()
-    mentions = []
-    for subreddit, titles in titles_by_subreddit.items():
-        phrase_counts = extract.extract_phrases(titles)
-        for phrase, count in phrase_counts.items():
-            mentions.append({
-                "phrase": phrase,
-                "subreddit": subreddit,
-                "mention_count": count,
-                "window_start": now,
-                "window_end": now,
-            })
-    db.insert_phrase_mentions(conn, mentions)
+        titles_by_subreddit: dict[str, list[str]] = {}
+        for p in posts:
+            titles_by_subreddit.setdefault(p["subreddit"], []).append(p["title"])
 
-    candidates = velocity.find_candidates(conn, min_mentions=min_mentions, min_growth_pct=min_growth)
-    conn.close()
+        now = datetime.now(timezone.utc).isoformat()
+        mentions = []
+        for subreddit, titles in titles_by_subreddit.items():
+            phrase_counts = extract.extract_phrases(titles)
+            for phrase, count in phrase_counts.items():
+                mentions.append({
+                    "phrase": phrase,
+                    "subreddit": subreddit,
+                    "mention_count": count,
+                    "window_start": now,
+                    "window_end": now,
+                })
+        db.insert_phrase_mentions(conn, mentions)
+
+        candidates = velocity.find_candidates(
+            conn, min_mentions=min_mentions, min_growth_pct=min_growth, current_window=now
+        )
+    finally:
+        conn.close()
+
     write_discovery_report(candidates)
 
 
@@ -159,6 +168,22 @@ def cmd_promote(phrase: str, category: str) -> None:
         print(f"'{phrase}' est deja dans la categorie '{category}', rien a faire")
         return
     updated = promote.add_keyword_to_yaml_text(yaml_text, phrase, category)
+
+    # Garde-fou avant ecriture : on ne touche jamais au fichier sur disque
+    # si le texte genere n'est pas un YAML valide contenant bien la phrase
+    # au bon endroit. Sans ca, un bug de generation textuelle (cf. promote.py)
+    # pourrait corrompre config/watchlist.yaml et casser check/scan/discover.
+    try:
+        data = yaml.safe_load(updated)
+        keywords = data["categories"][category]["keywords"]
+        assert phrase in keywords
+    except Exception as exc:
+        print(
+            f"Erreur : la mise a jour genererait un YAML invalide ou incorrect "
+            f"({exc}), annulation sans ecriture. {WATCHLIST_PATH} n'a pas ete modifie."
+        )
+        return
+
     WATCHLIST_PATH.write_text(updated)
     print(f"'{phrase}' ajoute a la categorie '{category}' dans {WATCHLIST_PATH}")
 

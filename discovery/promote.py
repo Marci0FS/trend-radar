@@ -7,6 +7,8 @@ aucun risque de perte de formatage).
 """
 from __future__ import annotations
 
+import json
+
 import yaml
 
 
@@ -32,7 +34,10 @@ def add_keyword_to_yaml_text(yaml_text: str, phrase: str, category: str) -> str:
             keywords_line_idx = i
             break
 
-    new_item = f'      - "{phrase}"\n'
+    # json.dumps produit un scalaire double-quote valide en YAML tout en
+    # echappant correctement les guillemets et antislashs eventuels dans
+    # la phrase (extraite par spaCy, donc non fiable telle quelle).
+    new_item = f"      - {json.dumps(phrase)}\n"
 
     if keywords_line_idx is not None:
         lines.insert(keywords_line_idx + 1, new_item)
@@ -54,7 +59,7 @@ def add_keyword_to_yaml_text(yaml_text: str, phrase: str, category: str) -> str:
     new_block = (
         f"  {category}:\n"
         f"    keywords:\n"
-        f'      - "{phrase}"\n'
+        f"      - {json.dumps(phrase)}\n"
         f"    subreddits: []\n"
         f"\n"
     )

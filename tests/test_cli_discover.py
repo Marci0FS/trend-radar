@@ -1,5 +1,5 @@
-from collectors import reddit as reddit_collector
-from discovery import reddit_scan
+from collectors import google_trends, reddit as reddit_collector
+from discovery import promote, reddit_scan
 from storage import db as storage_db
 
 import cli
@@ -88,3 +88,100 @@ def test_cmd_promote_skips_duplicate(tmp_path, monkeypatch, capsys):
 
 def content_unchanged(path):
     return path.read_text().count("mini projecteur") == 1
+
+
+def test_cmd_promote_aborts_write_when_validation_guard_fails(tmp_path, monkeypatch, capsys):
+    """Filet de securite (discovery finding #1) : si le texte YAML genere par
+    add_keyword_to_yaml_text s'avere invalide ou n'a pas correctement place la
+    phrase, cmd_promote doit s'arreter SANS ecrire sur le fichier watchlist.
+    Le fix json.dumps() rend ce cas quasi-impossible en pratique pour des
+    phrases normales ; ce test verifie que le garde-fou lui-meme fonctionne,
+    en simulant une generation de YAML defaillante."""
+    original_text = (
+        'categories:\n'
+        '  gadgets:\n'
+        '    keywords:\n'
+        '      - "mini projecteur"\n'
+        '    subreddits:\n'
+        '      - gadgets\n'
+    )
+    watchlist_file = tmp_path / "watchlist.yaml"
+    watchlist_file.write_text(original_text)
+    monkeypatch.setattr(cli, "WATCHLIST_PATH", watchlist_file)
+
+    # Simule une generation de YAML cassee (ex: regression future dans promote.py)
+    monkeypatch.setattr(
+        promote, "add_keyword_to_yaml_text", lambda text, phrase, category: "categories: [broken"
+    )
+
+    cli.cmd_promote("nouveau produit", "gadgets")
+
+    captured = capsys.readouterr()
+    assert "Erreur" in captured.out
+    assert watchlist_file.read_text() == original_text
+
+
+def test_cmd_promote_aborts_write_when_phrase_lands_wrong_category(tmp_path, monkeypatch, capsys):
+    """Meme garde-fou, mais pour le cas ou le YAML genere est valide mais la
+    phrase n'a pas atterri au bon endroit (ex: categorie absente du dict)."""
+    original_text = (
+        'categories:\n'
+        '  gadgets:\n'
+        '    keywords:\n'
+        '      - "mini projecteur"\n'
+        '    subreddits:\n'
+        '      - gadgets\n'
+    )
+    watchlist_file = tmp_path / "watchlist.yaml"
+    watchlist_file.write_text(original_text)
+    monkeypatch.setattr(cli, "WATCHLIST_PATH", watchlist_file)
+
+    # YAML valide mais qui n'ajoute rien a la categorie 'gadgets' (bug simule)
+    monkeypatch.setattr(
+        promote, "add_keyword_to_yaml_text", lambda text, phrase, category: text
+    )
+
+    cli.cmd_promote("nouveau produit", "gadgets")
+
+    captured = capsys.readouterr()
+    assert "Erreur" in captured.out
+    assert watchlist_file.read_text() == original_text
+
+
+def test_cmd_discover_never_calls_google_trends(tmp_path, monkeypatch):
+    """Contrainte la plus importante du projet (discovery finding #7) :
+    `discover` ne doit jamais interroger Google Trends. `growth_pct` est
+    legitimement appele par velocity.find_candidates, seul
+    fetch_interest_over_time (l'appel reseau) est verrouille ici."""
+    monkeypatch.setattr(storage_db, "DB_PATH", tmp_path / "test.db")
+    report_path = tmp_path / "discovery_report.md"
+    monkeypatch.setattr(cli, "DISCOVERY_REPORT_PATH", report_path)
+
+    def _fail_if_called(*args, **kwargs):
+        raise AssertionError("cmd_discover ne doit jamais appeler Google Trends")
+
+    monkeypatch.setattr(google_trends, "fetch_interest_over_time", _fail_if_called)
+
+    monkeypatch.setattr(reddit_collector, "get_client", lambda: object())
+    monkeypatch.setattr(
+        reddit_scan,
+        "scan_subreddits",
+        lambda reddit, subreddits, post_limit: [
+            {"subreddit": "gadgets", "title": "This LED face mask is amazing"},
+            {"subreddit": "gadgets", "title": "I love my LED face mask so much"},
+        ],
+    )
+
+    watchlist = {
+        "discovery": {
+            "subreddits": ["gadgets"],
+            "post_limit": 10,
+            "min_mentions": 1,
+            "min_growth_pct": 0,
+        }
+    }
+
+    cli.cmd_discover(watchlist)
+
+    assert report_path.exists()
+    assert "led face mask" in report_path.read_text()

@@ -14,14 +14,25 @@ from storage import db
 
 
 def find_candidates(
-    conn: sqlite3.Connection, min_mentions: int, min_growth_pct: float
+    conn: sqlite3.Connection,
+    min_mentions: int,
+    min_growth_pct: float,
+    current_window: str,
 ) -> list[dict]:
-    """Retourne les phrases dont la derniere fenetre depasse les deux seuils,
-    triees par croissance decroissante."""
+    """Retourne les phrases vues dans `current_window` (le run de scan courant)
+    dont la derniere fenetre depasse les deux seuils, triees par croissance
+    decroissante.
+
+    `current_window` borne la recherche aux phrases effectivement mentionnees
+    lors de ce run : une phrase qui n'apparait plus sur Reddit disparait donc
+    du rapport au lieu de rester indefiniment sur son dernier taux de
+    croissance historique. Ca borne aussi le nombre de phrases interrogees a
+    celles du run courant, plutot que toutes les phrases jamais enregistrees.
+    """
     candidates = []
-    for phrase in db.get_distinct_phrases(conn):
+    for phrase in db.get_phrases_in_window(conn, current_window):
         series = db.get_phrase_mention_series(conn, phrase)
-        if not series:
+        if not series or series[-1][0] != current_window:
             continue
         latest_count = series[-1][1]
         growth = growth_pct(series, window_days=1)

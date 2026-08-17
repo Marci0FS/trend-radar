@@ -9,6 +9,7 @@ signal fort que si au moins 2 sources convergent sur la même fenêtre de temps.
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
+python -m spacy download en_core_web_sm  # modele requis par le mode discovery
 cp .env.example .env  # renseigner REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET
 ```
 
