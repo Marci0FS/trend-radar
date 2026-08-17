@@ -3,6 +3,13 @@
 Utilise spaCy (modele anglais, local, gratuit) pour extraire les groupes
 nominaux (noun chunks) des titres, plutot qu'un simple comptage de n-grams :
 meilleure comprehension grammaticale, moins de bruit qu'un decoupage brut.
+
+IMPORTANT: Adjacent noun chunks are automatically merged before normalization.
+This is necessary because spaCy sometimes splits single compound nouns into
+multiple adjacent chunks due to sentence structure parsing. For example, in
+"using a LED face mask daily", spaCy creates adjacent chunks "a LED face" and
+"mask" that represent one semantic phrase; merging recombines them correctly.
+Non-adjacent chunks (separated by other tokens) remain independent.
 """
 from __future__ import annotations
 
@@ -57,22 +64,27 @@ def extract_phrases(titles: list[str]) -> dict[str, int]:
     nlp = _get_nlp()
     counts: dict[str, int] = {}
     for doc in nlp.pipe(titles):
-        # Extract noun chunks and merge adjacent ones if needed
+        # Extract noun chunks and merge adjacent ones (spaCy sometimes splits
+        # single compound nouns like "LED face mask" into separate chunks
+        # "a LED face" and "mask" depending on sentence structure; merging
+        # recombines them. Only chunks with no gap between them are merged.
         chunks = list(doc.noun_chunks)
         i = 0
         while i < len(chunks):
             chunk = chunks[i]
-            # Look ahead to see if we should merge with following chunk
+            # Look ahead to merge with following chunk if adjacent (no token gap)
             merged_text = chunk.text
             j = i + 1
             while j < len(chunks):
                 next_chunk = chunks[j]
-                # Check if chunks are adjacent (no gap between them)
+                # Check if chunks are adjacent: chunk.end == next_chunk.start
+                # means no gap between them (they share a position boundary)
                 if chunk.end == next_chunk.start:
                     merged_text += " " + next_chunk.text
                     chunk = next_chunk
                     j += 1
                 else:
+                    # Chunks are not adjacent; stop merging
                     break
 
             phrase = _normalize(merged_text)
