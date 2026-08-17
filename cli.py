@@ -12,6 +12,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import yaml
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from collectors import google_trends
 from collectors import reddit as reddit_collector

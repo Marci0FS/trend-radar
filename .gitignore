@@ -7,6 +7,7 @@ venv/
 data/*.db
 data/*.db-journal
 data/report.md
+data/discovery_report.md
 .DS_Store
 node_modules/
 .vercel/

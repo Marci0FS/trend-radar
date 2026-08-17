@@ -63,3 +63,29 @@ thresholds:
   trends_growth_pct: 20
   reddit_min_posts: 3
   reddit_min_avg_score: 10
+
+# Configuration du mode discovery (python cli.py discover) — detecte des
+# candidats sans mots-cles fournis a l'avance, a partir de l'activite Reddit.
+discovery:
+  subreddits:
+    # subreddits deja cibles par categorie (reutilises)
+    - gadgets
+    - shutupandtakemymoney
+    - SkincareAddiction
+    - beauty
+    - BuyItForLife
+    - HomeImprovement
+    - fitness
+    - xxfitness
+    - cats
+    - dogs
+    - Mommit
+    - beyondthebump
+    # subreddits generalistes "produits tendance", hors categories
+    - DidntKnowIWantedThat
+    - InternetIsBeautiful
+    - CoolGadgets
+    - ProductPorn
+  post_limit: 50
+  min_mentions: 5
+  min_growth_pct: 30

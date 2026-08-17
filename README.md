@@ -15,6 +15,9 @@ cp .env.example .env  # renseigner REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET
 Créer une app Reddit (type "script") sur https://www.reddit.com/prefs/apps
 pour obtenir les credentials.
 
+Le fichier `.env` est chargé automatiquement au démarrage de la CLI
+(via `python-dotenv`).
+
 ## Usage
 
 ```bash
@@ -28,6 +31,20 @@ python cli.py scan
 
 Pour automatiser `scan` en tâche de fond, ajouter une entrée cron/launchd
 locale (pas de process Vercel — voir note architecture ci-dessous).
+
+### Mode discovery (sans mots-clés)
+
+```bash
+# Detecte des candidats emergents sur Reddit (config/watchlist.yaml -> discovery)
+python cli.py discover
+
+# Lit data/discovery_report.md, puis fait entrer un candidat dans le pipeline standard
+python cli.py promote "nom du produit" gadgets
+```
+
+`discover` ne consulte jamais Google Trends automatiquement — seul `promote`
+suivi de `scan` valide un candidat via Trends + convergence. Ca evite de
+gaspiller le budget de requetes Trends sur du bruit d'extraction.
 
 ## Stockage
 

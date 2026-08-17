@@ -3,3 +3,4 @@ praw
 PyYAML
 spacy
 pytest
+python-dotenv
