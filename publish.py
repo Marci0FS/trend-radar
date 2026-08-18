@@ -37,7 +37,7 @@ def publish_json(repo_root: Path) -> bool:
         return False
 
     commit = subprocess.run(
-        ["git", "commit", "-m", "chore: update signals.json"],
+        ["git", "commit", "-m", "chore: update signals.json", "--", SIGNALS_JSON_RELATIVE_PATH],
         cwd=repo_root,
         capture_output=True,
         text=True,

@@ -25,8 +25,8 @@ def test_publish_json_commits_and_pushes_when_changed(tmp_path):
     assert result is True
     calls = [c.args[0] for c in mock_run.call_args_list]
     assert calls[0][:2] == ["git", "status"]
-    assert calls[1][:2] == ["git", "add"]
-    assert calls[2][:2] == ["git", "commit"]
+    assert calls[1] == ["git", "add", "web/public/data/signals.json"]
+    assert calls[2] == ["git", "commit", "-m", "chore: update signals.json", "--", "web/public/data/signals.json"]
     assert calls[3] == ["git", "push"]
 
 
