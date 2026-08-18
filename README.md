@@ -16,6 +16,26 @@ cp .env.example .env  # renseigner REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET
 Créer une app Reddit (type "script") sur https://www.reddit.com/prefs/apps
 pour obtenir les credentials.
 
+### eBay (optionnel, 3e source de convergence)
+
+Cree une "application" sur https://developer.ebay.com/my/keys (environnement
+**Production**, pas Sandbox), recupere l'App ID et le Cert ID, ajoute-les a
+`.env` :
+
+```
+EBAY_CLIENT_ID=ton_app_id
+EBAY_CLIENT_SECRET=ton_cert_id
+EBAY_ENVIRONMENT=PRODUCTION
+```
+
+Ta cle Production doit etre "compliant" (section Alerts & Notifications de
+la page Application Keys) — si tu n'utilises pas d'endpoint de notification,
+demande l'exemption "Marketplace Account Deletion", gratuite et immediate
+pour un usage en lecture seule comme celui-ci.
+
+Sans credentials, `scan` continue de fonctionner normalement, eBay est juste
+desactive pour cette source.
+
 Le fichier `.env` est chargé automatiquement au démarrage de la CLI
 (via `python-dotenv`).
 
