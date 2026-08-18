@@ -47,6 +47,24 @@ python cli.py promote "nom du produit" gadgets
 suivi de `scan` valide un candidat via Trends + convergence. Ca evite de
 gaspiller le budget de requetes Trends sur du bruit d'extraction.
 
+### Dashboard web (Vercel)
+
+```bash
+# Met a jour web/public/data/signals.json et le pousse sur GitHub
+# (declenche un redeploy automatique si le projet Vercel est branche sur ce repo)
+python cli.py scan --publish
+python cli.py discover --publish
+```
+
+Sans `--publish`, `signals.json` est mis a jour localement mais rien n'est
+pousse — tu restes maitre de quand publier.
+
+**Premier deploiement** : depuis `web/public/`, lancer `vercel --prod` (CLI
+deja authentifiee) pour creer le projet et obtenir une URL. Pour activer le
+redeploiement automatique a chaque `--publish`, relier le projet Vercel a ce
+repo GitHub et regler son "Root Directory" sur `web/public` dans les
+parametres du projet (Settings → General → Root Directory).
+
 ## Stockage
 
 SQLite (`data/trends.db`), historique dans le temps : chaque scan ajoute des
