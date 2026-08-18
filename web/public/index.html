@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>trend-radar</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; background: #fafafa; color: #1a1a1a; }
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.1rem; margin-top: 2rem; }
+  .updated { color: #666; font-size: 0.9rem; margin-bottom: 1rem; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+  th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #ddd; }
+  th { font-size: 0.8rem; text-transform: uppercase; color: #666; }
+  .score-fort { font-weight: bold; color: #0a7d2e; }
+  .empty { color: #666; font-style: italic; padding: 1rem 0; }
+  code { background: #eee; padding: 0.1rem 0.3rem; border-radius: 3px; }
+</style>
+</head>
+<body>
+  <h1>trend-radar</h1>
+  <div class="updated" id="updated"></div>
+
+  <h2>Watchlist</h2>
+  <div id="watchlist-container"></div>
+
+  <h2>Discovery</h2>
+  <div id="discovery-container"></div>
+
+  <script>
+    async function loadSignals() {
+      try {
+        const res = await fetch('data/signals.json');
+        if (!res.ok) throw new Error('not found');
+        const data = await res.json();
+        render(data);
+      } catch (err) {
+        showEmptyState();
+      }
+    }
+
+    function showEmptyState() {
+      const msg = '<p class="empty">Aucune donnee pour l\'instant &mdash; lance <code>python cli.py scan --publish</code>.</p>';
+      document.getElementById('watchlist-container').innerHTML = msg;
+      document.getElementById('discovery-container').innerHTML = '';
+    }
+
+    function render(data) {
+      document.getElementById('updated').textContent = 'Derniere mise a jour : ' + (data.last_updated || 'inconnue');
+      renderWatchlist(data.watchlist || []);
+      renderDiscovery(data.discovery || []);
+    }
+
+    function renderWatchlist(items) {
+      const container = document.getElementById('watchlist-container');
+      if (items.length === 0) {
+        container.innerHTML = '<p class="empty">Aucun resultat de scan pour l\'instant.</p>';
+        return;
+      }
+      const sorted = [...items].sort((a, b) => b.convergence_score - a.convergence_score);
+      let html = '<table><thead><tr><th>Mot-cle</th><th>Categorie</th><th>Score</th><th>Sources</th><th>Trends</th><th>Reddit</th></tr></thead><tbody>';
+      for (const r of sorted) {
+        const cls = r.sources_count >= 2 ? 'score-fort' : '';
+        html += '<tr><td>' + escapeHtml(r.keyword) + '</td><td>' + escapeHtml(r.category) + '</td>' +
+          '<td class="' + cls + '">' + r.convergence_score + '</td><td>' + r.sources_count + '/2</td>' +
+          '<td>' + r.trends_growth_pct + '%</td><td>' + r.reddit_post_count + ' posts</td></tr>';
+      }
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    function renderDiscovery(items) {
+      const container = document.getElementById('discovery-container');
+      if (items.length === 0) {
+        container.innerHTML = '<p class="empty">Aucun candidat discovery pour l\'instant.</p>';
+        return;
+      }
+      const sorted = [...items].sort((a, b) => b.growth_pct - a.growth_pct);
+      let html = '<table><thead><tr><th>Phrase</th><th>Mentions</th><th>Croissance</th></tr></thead><tbody>';
+      for (const c of sorted) {
+        html += '<tr><td>' + escapeHtml(c.phrase) + '</td><td>' + c.mention_count + '</td><td>' + c.growth_pct + '%</td></tr>';
+      }
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    loadSignals();
+  </script>
+</body>
+</html>
