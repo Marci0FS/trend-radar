@@ -60,12 +60,14 @@ def get_app_token() -> str:
             timeout=15,
         )
         resp.raise_for_status()
+        data = resp.json()
+        token = data["access_token"]
+        expires_at = time.time() + int(data.get("expires_in", 7200))
     except requests.RequestException as exc:
         raise EbayError(f"Echec authentification eBay : {exc}") from exc
+    except (KeyError, ValueError) as exc:
+        raise EbayError(f"Reponse invalide du serveur eBay : {exc}") from exc
 
-    data = resp.json()
-    token = data["access_token"]
-    expires_at = time.time() + int(data.get("expires_in", 7200))
     _token_cache[env] = (token, expires_at)
     return token
 
@@ -89,8 +91,10 @@ def fetch_listing_count(keyword: str, marketplace: str = "EBAY_FR") -> int:
             timeout=15,
         )
         resp.raise_for_status()
+        data = resp.json()
     except requests.RequestException as exc:
         raise EbayError(f"Echec recherche eBay pour '{keyword}' : {exc}") from exc
+    except ValueError as exc:
+        raise EbayError(f"Reponse invalide du serveur eBay pour '{keyword}' : {exc}") from exc
 
-    data = resp.json()
     return int(data.get("total", 0))

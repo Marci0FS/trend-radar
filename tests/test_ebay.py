@@ -62,3 +62,34 @@ def test_fetch_listing_count_raises_ebay_error_on_http_failure(monkeypatch):
     ):
         with pytest.raises(ebay.EbayError):
             ebay.fetch_listing_count("led face mask")
+
+
+def test_get_app_token_raises_ebay_error_on_http_failure(monkeypatch):
+    monkeypatch.setenv("EBAY_CLIENT_ID", "test-id")
+    monkeypatch.setenv("EBAY_CLIENT_SECRET", "test-secret")
+    monkeypatch.setenv("EBAY_ENVIRONMENT", "PRODUCTION")
+    ebay._token_cache.clear()
+
+    import requests as requests_module
+
+    with patch(
+        "collectors.ebay.requests.post",
+        side_effect=requests_module.exceptions.ConnectionError("boom"),
+    ):
+        with pytest.raises(ebay.EbayError):
+            ebay.get_app_token()
+
+
+def test_get_app_token_raises_ebay_error_on_missing_access_token_field(monkeypatch):
+    monkeypatch.setenv("EBAY_CLIENT_ID", "test-id")
+    monkeypatch.setenv("EBAY_CLIENT_SECRET", "test-secret")
+    monkeypatch.setenv("EBAY_ENVIRONMENT", "PRODUCTION")
+    ebay._token_cache.clear()
+
+    mock_response = MagicMock()
+    mock_response.json.return_value = {"expires_in": 7200}  # Missing access_token
+    mock_response.raise_for_status.return_value = None
+
+    with patch("collectors.ebay.requests.post", return_value=mock_response):
+        with pytest.raises(ebay.EbayError):
+            ebay.get_app_token()
