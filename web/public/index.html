@@ -4,28 +4,249 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>trend-radar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; background: #fafafa; color: #1a1a1a; }
-  h1 { font-size: 1.5rem; }
-  h2 { font-size: 1.1rem; margin-top: 2rem; }
-  .updated { color: #666; font-size: 0.9rem; margin-bottom: 1rem; }
-  table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
-  th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #ddd; }
-  th { font-size: 0.8rem; text-transform: uppercase; color: #666; }
-  .score-fort { font-weight: bold; color: #0a7d2e; }
-  .empty { color: #666; font-style: italic; padding: 1rem 0; }
-  code { background: #eee; padding: 0.1rem 0.3rem; border-radius: 3px; }
+  :root {
+    --bg: #0c0a08;
+    --panel: #17130f;
+    --grid: #2b2118;
+    --amber: #ffb000;
+    --amber-dim: #8c6a2e;
+    --parchment: #ece2c6;
+    --rust: #b34a2e;
+    --font-display: "Space Grotesk", sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--parchment);
+    font-family: var(--font-mono);
+    margin: 0;
+    padding: 0 1.25rem 4rem;
+  }
+
+  main {
+    max-width: 880px;
+    margin: 0 auto;
+  }
+
+  /* ---- Hero : balayage radar ---- */
+
+  .hero {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    padding: 3rem 0 2.5rem;
+    border-bottom: 1px solid var(--grid);
+    flex-wrap: wrap;
+  }
+
+  .sweep {
+    position: relative;
+    width: 96px;
+    height: 96px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background:
+      repeating-radial-gradient(circle, transparent 0, transparent 14px, var(--grid) 15px),
+      var(--panel);
+    border: 1px solid var(--grid);
+    overflow: hidden;
+  }
+
+  .sweep::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: conic-gradient(from 0deg, var(--amber) 0deg, transparent 55deg, transparent 360deg);
+    opacity: 0.75;
+    animation: rotate 5s linear infinite;
+  }
+
+  .sweep::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 6px;
+    height: 6px;
+    margin: -3px 0 0 -3px;
+    border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 8px 2px var(--amber);
+  }
+
+  @keyframes rotate {
+    to { transform: rotate(360deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sweep::before { animation: none; opacity: 0.35; }
+  }
+
+  .hero-text h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 2rem;
+    letter-spacing: 0.02em;
+    color: var(--amber);
+    margin: 0 0 0.35rem;
+  }
+
+  .hero-text p {
+    margin: 0 0 0.85rem;
+    color: var(--parchment);
+    opacity: 0.85;
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+  }
+
+  .status {
+    font-size: 0.78rem;
+    color: var(--amber-dim);
+    letter-spacing: 0.02em;
+  }
+
+  .status strong {
+    color: var(--parchment);
+    font-weight: 500;
+  }
+
+  /* ---- Panels ---- */
+
+  .panel {
+    margin-top: 2.25rem;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--grid);
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .panel-header h2 {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin: 0;
+  }
+
+  .panel-header .count {
+    font-size: 0.78rem;
+    color: var(--amber-dim);
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 0.55rem 0.75rem 0.55rem 0;
+    border-bottom: 1px solid var(--grid);
+  }
+
+  th {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--amber-dim);
+    font-weight: 500;
+  }
+
+  td.score {
+    color: var(--amber);
+    font-weight: 700;
+  }
+
+  .up { color: var(--amber); }
+  .down { color: var(--rust); }
+
+  .dots {
+    letter-spacing: 0.14em;
+    color: var(--amber-dim);
+  }
+  .dots .lit { color: var(--amber); text-shadow: 0 0 6px var(--amber); }
+
+  .empty {
+    color: var(--amber-dim);
+    font-size: 0.85rem;
+    padding: 0.5rem 0 1.5rem;
+    line-height: 1.6;
+  }
+
+  code {
+    background: var(--grid);
+    color: var(--parchment);
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.82em;
+  }
+
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--grid);
+    font-size: 0.72rem;
+    color: var(--amber-dim);
+  }
+
+  @media (max-width: 560px) {
+    .hero { padding-top: 2rem; gap: 1.25rem; }
+    .sweep { width: 72px; height: 72px; }
+    .hero-text h1 { font-size: 1.5rem; }
+  }
 </style>
 </head>
 <body>
-  <h1>trend-radar</h1>
-  <div class="updated" id="updated"></div>
+<main>
 
-  <h2>Watchlist</h2>
-  <div id="watchlist-container"></div>
+  <div class="hero">
+    <div class="sweep" aria-hidden="true"></div>
+    <div class="hero-text">
+      <h1>trend-radar</h1>
+      <p>Rep&egrave;re les tendances avant qu'elles saturent.</p>
+      <div class="status" id="status">balayage en cours&hellip;</div>
+    </div>
+  </div>
 
-  <h2>Discovery</h2>
-  <div id="discovery-container"></div>
+  <section class="panel">
+    <div class="panel-header">
+      <h2>Watchlist</h2>
+      <span class="count" id="watchlist-count"></span>
+    </div>
+    <div id="watchlist-container"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header">
+      <h2>Discovery</h2>
+      <span class="count" id="discovery-count"></span>
+    </div>
+    <div id="discovery-container"></div>
+  </section>
+
+  <footer>signal fort = deux sources independantes en accord (&#9679;&#9679;)</footer>
+
+</main>
 
   <script>
     async function loadSignals() {
@@ -40,47 +261,70 @@
     }
 
     function showEmptyState() {
-      const msg = '<p class="empty">Aucune donnee pour l\'instant &mdash; lance <code>python cli.py scan --publish</code>.</p>';
+      document.getElementById('status').textContent = 'aucune donnee recue pour l\'instant';
+      const msg = '<p class="empty">Aucune donnee pour l\'instant &mdash; lance <code>python cli.py scan --publish</code> pour le premier balayage.</p>';
       document.getElementById('watchlist-container').innerHTML = msg;
       document.getElementById('discovery-container').innerHTML = '';
     }
 
     function render(data) {
-      document.getElementById('updated').textContent = 'Derniere mise a jour : ' + (data.last_updated || 'inconnue');
-      renderWatchlist(data.watchlist || []);
-      renderDiscovery(data.discovery || []);
+      const watchlist = data.watchlist || [];
+      const discovery = data.discovery || [];
+
+      document.getElementById('status').innerHTML =
+        'dernier balayage : <strong>' + escapeHtml(data.last_updated || 'inconnu') + '</strong>';
+      document.getElementById('watchlist-count').textContent = watchlist.length + ' suivis';
+      document.getElementById('discovery-count').textContent = discovery.length + ' candidats';
+
+      renderWatchlist(watchlist);
+      renderDiscovery(discovery);
+    }
+
+    function dots(n) {
+      let out = '<span class="dots">';
+      for (let i = 0; i < 2; i++) {
+        out += i < n ? '<span class="lit">&#9679;</span>' : '<span>&#9675;</span>';
+      }
+      return out + '</span>';
+    }
+
+    function pct(value) {
+      const cls = value >= 0 ? 'up' : 'down';
+      const sign = value >= 0 ? '+' : '';
+      return '<span class="' + cls + '">' + sign + value + '%</span>';
     }
 
     function renderWatchlist(items) {
       const container = document.getElementById('watchlist-container');
       if (items.length === 0) {
-        container.innerHTML = '<p class="empty">Aucun resultat de scan pour l\'instant.</p>';
+        container.innerHTML = '<p class="empty">Aucun resultat de balayage pour l\'instant.</p>';
         return;
       }
       const sorted = [...items].sort((a, b) => b.convergence_score - a.convergence_score);
-      let html = '<table><thead><tr><th>Mot-cle</th><th>Categorie</th><th>Score</th><th>Sources</th><th>Trends</th><th>Reddit</th></tr></thead><tbody>';
+      let html = '<div class="table-wrap"><table><thead><tr>' +
+        '<th>Mot-cle</th><th>Categorie</th><th>Score</th><th>Sources</th><th>Trends</th><th>Reddit</th>' +
+        '</tr></thead><tbody>';
       for (const r of sorted) {
-        const cls = r.sources_count >= 2 ? 'score-fort' : '';
         html += '<tr><td>' + escapeHtml(r.keyword) + '</td><td>' + escapeHtml(r.category) + '</td>' +
-          '<td class="' + cls + '">' + r.convergence_score + '</td><td>' + r.sources_count + '/2</td>' +
-          '<td>' + r.trends_growth_pct + '%</td><td>' + r.reddit_post_count + ' posts</td></tr>';
+          '<td class="score">' + r.convergence_score + '</td><td>' + dots(r.sources_count) + '</td>' +
+          '<td>' + pct(r.trends_growth_pct) + '</td><td>' + r.reddit_post_count + ' posts</td></tr>';
       }
-      html += '</tbody></table>';
+      html += '</tbody></table></div>';
       container.innerHTML = html;
     }
 
     function renderDiscovery(items) {
       const container = document.getElementById('discovery-container');
       if (items.length === 0) {
-        container.innerHTML = '<p class="empty">Aucun candidat discovery pour l\'instant.</p>';
+        container.innerHTML = '<p class="empty">Aucun candidat detecte &mdash; le mode discovery attend l\'acces Reddit.</p>';
         return;
       }
       const sorted = [...items].sort((a, b) => b.growth_pct - a.growth_pct);
-      let html = '<table><thead><tr><th>Phrase</th><th>Mentions</th><th>Croissance</th></tr></thead><tbody>';
+      let html = '<div class="table-wrap"><table><thead><tr><th>Phrase</th><th>Mentions</th><th>Croissance</th></tr></thead><tbody>';
       for (const c of sorted) {
-        html += '<tr><td>' + escapeHtml(c.phrase) + '</td><td>' + c.mention_count + '</td><td>' + c.growth_pct + '%</td></tr>';
+        html += '<tr><td>' + escapeHtml(c.phrase) + '</td><td>' + c.mention_count + '</td><td>' + pct(c.growth_pct) + '</td></tr>';
       }
-      html += '</tbody></table>';
+      html += '</tbody></table></div>';
       container.innerHTML = html;
     }
 
