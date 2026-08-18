@@ -7,6 +7,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -25,6 +26,7 @@ from storage import db
 WATCHLIST_PATH = Path(__file__).parent / "config" / "watchlist.yaml"
 REPORT_PATH = Path(__file__).parent / "data" / "report.md"
 DISCOVERY_REPORT_PATH = Path(__file__).parent / "data" / "discovery_report.md"
+SIGNALS_JSON_PATH = Path(__file__).parent / "web" / "public" / "data" / "signals.json"
 
 
 def load_watchlist() -> dict:
@@ -220,6 +222,25 @@ def write_discovery_report(candidates: list[dict]) -> None:
     DISCOVERY_REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
     DISCOVERY_REPORT_PATH.write_text("\n".join(lines), encoding="utf-8")
     print(f"Rapport discovery ecrit : {DISCOVERY_REPORT_PATH}")
+
+
+def write_signals_json(section: str, entries: list[dict]) -> None:
+    """Met a jour une section ('watchlist' ou 'discovery') de signals.json,
+    en preservant l'autre section si le fichier existe deja. Tolere un
+    fichier JSON corrompu en repartant d'un objet vide plutot que planter."""
+    data: dict = {}
+    if SIGNALS_JSON_PATH.exists():
+        try:
+            data = json.loads(SIGNALS_JSON_PATH.read_text())
+        except (json.JSONDecodeError, OSError):
+            data = {}
+    data.setdefault("watchlist", [])
+    data.setdefault("discovery", [])
+    data[section] = entries
+    data["last_updated"] = datetime.now(timezone.utc).isoformat()
+    SIGNALS_JSON_PATH.parent.mkdir(parents=True, exist_ok=True)
+    SIGNALS_JSON_PATH.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"signals.json mis a jour : {SIGNALS_JSON_PATH}")
 
 
 def main() -> None:
