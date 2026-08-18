@@ -23,6 +23,8 @@ from discovery import extract, promote, reddit_scan, velocity
 from scoring.convergence import compute_convergence
 from storage import db
 
+import publish
+
 WATCHLIST_PATH = Path(__file__).parent / "config" / "watchlist.yaml"
 REPORT_PATH = Path(__file__).parent / "data" / "report.md"
 DISCOVERY_REPORT_PATH = Path(__file__).parent / "data" / "discovery_report.md"
@@ -58,7 +60,7 @@ def cmd_check(keyword: str, watchlist: dict) -> None:
         print(f"  [{p['score']:>4}] {p['title']} ({p['subreddit']})")
 
 
-def cmd_scan(watchlist: dict) -> None:
+def cmd_scan(watchlist: dict, publish_after: bool = False) -> None:
     """Veille continue : scanne tous les mots-cles actifs de la watchlist, stocke, score."""
     db.init_db()
     conn = db.get_connection()
@@ -110,8 +112,24 @@ def cmd_scan(watchlist: dict) -> None:
     conn.close()
     write_report(results)
 
+    signal_entries = [
+        {
+            "keyword": r["keyword"],
+            "category": r["category"],
+            "convergence_score": r["convergence_score"],
+            "sources_count": r["sources_count"],
+            "trends_growth_pct": r["details"]["trends_growth_pct"],
+            "reddit_post_count": r["details"]["reddit_post_count"],
+            "reddit_avg_score": r["details"]["reddit_avg_score"],
+        }
+        for r in results
+    ]
+    write_signals_json("watchlist", signal_entries)
+    if publish_after:
+        publish.publish_json(Path(__file__).parent)
 
-def cmd_discover(watchlist: dict) -> None:
+
+def cmd_discover(watchlist: dict, publish_after: bool = False) -> None:
     """Discovery : scanne Reddit sans mots-cles, detecte des candidats emergents."""
     db.init_db()
     conn = db.get_connection()
@@ -161,6 +179,9 @@ def cmd_discover(watchlist: dict) -> None:
         conn.close()
 
     write_discovery_report(candidates)
+    write_signals_json("discovery", candidates)
+    if publish_after:
+        publish.publish_json(Path(__file__).parent)
 
 
 def cmd_promote(phrase: str, category: str) -> None:
@@ -250,9 +271,17 @@ def main() -> None:
     check_parser = sub.add_parser("check", help="requete ponctuelle sur un mot-cle")
     check_parser.add_argument("keyword")
 
-    sub.add_parser("scan", help="veille continue sur la watchlist")
+    scan_parser = sub.add_parser("scan", help="veille continue sur la watchlist")
+    scan_parser.add_argument(
+        "--publish", action="store_true", help="pousse signals.json vers GitHub apres le scan"
+    )
 
-    sub.add_parser("discover", help="detecte des candidats emergents sur Reddit, sans mots-cles")
+    discover_parser = sub.add_parser(
+        "discover", help="detecte des candidats emergents sur Reddit, sans mots-cles"
+    )
+    discover_parser.add_argument(
+        "--publish", action="store_true", help="pousse signals.json vers GitHub apres le scan"
+    )
 
     promote_parser = sub.add_parser("promote", help="ajoute un candidat discovery a la watchlist")
     promote_parser.add_argument("phrase")
@@ -264,9 +293,9 @@ def main() -> None:
     if args.command == "check":
         cmd_check(args.keyword, watchlist)
     elif args.command == "scan":
-        cmd_scan(watchlist)
+        cmd_scan(watchlist, publish_after=args.publish)
     elif args.command == "discover":
-        cmd_discover(watchlist)
+        cmd_discover(watchlist, publish_after=args.publish)
     elif args.command == "promote":
         cmd_promote(args.phrase, args.category)
 
