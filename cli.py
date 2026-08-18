@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -126,7 +127,9 @@ def cmd_scan(watchlist: dict, publish_after: bool = False) -> None:
     ]
     write_signals_json("watchlist", signal_entries)
     if publish_after:
-        publish.publish_json(Path(__file__).parent)
+        publish.publish_json(
+            Path(__file__).parent, os.path.relpath(SIGNALS_JSON_PATH, Path(__file__).parent)
+        )
 
 
 def cmd_discover(watchlist: dict, publish_after: bool = False) -> None:
@@ -179,9 +182,19 @@ def cmd_discover(watchlist: dict, publish_after: bool = False) -> None:
         conn.close()
 
     write_discovery_report(candidates)
-    write_signals_json("discovery", candidates)
+    signal_entries = [
+        {
+            "phrase": c["phrase"],
+            "mention_count": c["mention_count"],
+            "growth_pct": c["growth_pct"],
+        }
+        for c in candidates
+    ]
+    write_signals_json("discovery", signal_entries)
     if publish_after:
-        publish.publish_json(Path(__file__).parent)
+        publish.publish_json(
+            Path(__file__).parent, os.path.relpath(SIGNALS_JSON_PATH, Path(__file__).parent)
+        )
 
 
 def cmd_promote(phrase: str, category: str) -> None:
@@ -254,6 +267,8 @@ def write_signals_json(section: str, entries: list[dict]) -> None:
         try:
             data = json.loads(SIGNALS_JSON_PATH.read_text())
         except (json.JSONDecodeError, OSError):
+            data = {}
+        if not isinstance(data, dict):
             data = {}
     data.setdefault("watchlist", [])
     data.setdefault("discovery", [])

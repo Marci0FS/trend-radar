@@ -59,6 +59,11 @@ python cli.py discover --publish
 Sans `--publish`, `signals.json` est mis a jour localement mais rien n'est
 pousse — tu restes maitre de quand publier.
 
+Attention : l'integration Git de Vercel ne produit un deploiement de
+*production* que depuis la branche de production configuree sur le projet
+(en general `main`) — pousser `--publish` depuis une autre branche declenche
+un deploiement preview, pas la mise a jour du site en production.
+
 **Premier deploiement** : depuis `web/public/`, lancer `vercel --prod` (CLI
 deja authentifiee) pour creer le projet et obtenir une URL. Pour activer le
 redeploiement automatique a chaque `--publish`, relier le projet Vercel a ce
@@ -73,6 +78,6 @@ lignes, rien n'est jamais écrasé.
 ## Architecture
 
 Collecte 100% locale (pytrends + PRAW en direct, pas de MCP — inadapté à un
-cron headless). Le dashboard web (à venir) sera déployé sur Vercel en lecture
-seule sur un export JSON, car les fonctions Vercel sont éphémères et
-incompatibles avec une persistance SQLite.
+cron headless). Le dashboard web est déployé sur Vercel en lecture seule sur
+un export JSON, car les fonctions Vercel sont éphémères et incompatibles
+avec une persistance SQLite.

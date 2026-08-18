@@ -10,14 +10,13 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
-SIGNALS_JSON_RELATIVE_PATH = "web/public/data/signals.json"
 
-
-def publish_json(repo_root: Path) -> bool:
-    """Commit + push signals.json s'il a change. Retourne True si un push
-    a eu lieu, False si rien n'avait change ou en cas d'erreur."""
+def publish_json(repo_root: Path, relative_path: str) -> bool:
+    """Commit + push le fichier signals.json (donne en chemin relatif a
+    repo_root) s'il a change. Retourne True si un push a eu lieu, False si
+    rien n'avait change ou en cas d'erreur."""
     status = subprocess.run(
-        ["git", "status", "--porcelain", "--", SIGNALS_JSON_RELATIVE_PATH],
+        ["git", "status", "--porcelain", "--", relative_path],
         cwd=repo_root,
         capture_output=True,
         text=True,
@@ -30,14 +29,14 @@ def publish_json(repo_root: Path) -> bool:
         return False
 
     add = subprocess.run(
-        ["git", "add", SIGNALS_JSON_RELATIVE_PATH], cwd=repo_root, capture_output=True, text=True
+        ["git", "add", relative_path], cwd=repo_root, capture_output=True, text=True
     )
     if add.returncode != 0:
         print(f"Erreur git add : {add.stderr.strip()}")
         return False
 
     commit = subprocess.run(
-        ["git", "commit", "-m", "chore: update signals.json", "--", SIGNALS_JSON_RELATIVE_PATH],
+        ["git", "commit", "-m", "chore: update signals.json", "--", relative_path],
         cwd=repo_root,
         capture_output=True,
         text=True,

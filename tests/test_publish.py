@@ -6,7 +6,7 @@ import publish
 def test_publish_json_noop_when_unchanged(tmp_path):
     with patch("publish.subprocess.run") as mock_run:
         mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
-        result = publish.publish_json(tmp_path)
+        result = publish.publish_json(tmp_path, "web/public/data/signals.json")
 
     assert result is False
     mock_run.assert_called_once()
@@ -20,7 +20,7 @@ def test_publish_json_commits_and_pushes_when_changed(tmp_path):
 
     with patch("publish.subprocess.run") as mock_run:
         mock_run.side_effect = [status_result, ok_result, ok_result, ok_result]
-        result = publish.publish_json(tmp_path)
+        result = publish.publish_json(tmp_path, "web/public/data/signals.json")
 
     assert result is True
     calls = [c.args[0] for c in mock_run.call_args_list]
@@ -37,7 +37,7 @@ def test_publish_json_handles_push_failure(tmp_path):
 
     with patch("publish.subprocess.run") as mock_run:
         mock_run.side_effect = [status_result, ok_result, ok_result, push_fail]
-        result = publish.publish_json(tmp_path)
+        result = publish.publish_json(tmp_path, "web/public/data/signals.json")
 
     assert result is False
 
@@ -45,6 +45,6 @@ def test_publish_json_handles_push_failure(tmp_path):
 def test_publish_json_handles_status_failure(tmp_path):
     with patch("publish.subprocess.run") as mock_run:
         mock_run.return_value = MagicMock(returncode=1, stdout="", stderr="fatal: not a git repository")
-        result = publish.publish_json(tmp_path)
+        result = publish.publish_json(tmp_path, "web/public/data/signals.json")
 
     assert result is False
