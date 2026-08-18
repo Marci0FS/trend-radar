@@ -80,11 +80,16 @@ def cmd_scan(watchlist: dict, publish_after: bool = False) -> None:
             print(f"Scan : {keyword} ({category})")
             keyword_id = db.get_or_create_keyword(conn, keyword, category)
 
-            trends_data = google_trends.fetch_interest_over_time(
-                keyword,
-                timeframe=watchlist.get("trends_timeframe", "today 3-m"),
-                geo=watchlist.get("trends_geo", "FR"),
-            )
+            try:
+                trends_data = google_trends.fetch_interest_over_time(
+                    keyword,
+                    timeframe=watchlist.get("trends_timeframe", "today 3-m"),
+                    geo=watchlist.get("trends_geo", "FR"),
+                )
+            except RuntimeError as exc:
+                print(f"  Echec Google Trends pour '{keyword}', mot-cle ignore pour ce scan : {exc}")
+                time.sleep(2)
+                continue
             db.insert_trends_snapshots(conn, keyword_id, trends_data, watchlist.get("trends_geo", "FR"))
             time.sleep(2)  # limite le risque de 429 pytrends sur un scan a beaucoup de mots-cles
 
