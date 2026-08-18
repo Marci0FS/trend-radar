@@ -135,10 +135,13 @@ Après le bloc Trends existant, ajouter le même pattern que Reddit pour la
 gestion des credentials manquantes (essai de récupération du client eBay
 une fois avant la boucle, skip propre si `KeyError`), puis dans la boucle
 par mot-clé : appel `fetch_listing_count`, insertion via
-`insert_ebay_snapshot`. `signal_entries` (déjà construit pour le JSON
-dashboard) gagne les champs `ebay_growth_pct` — le dashboard n'est PAS
-modifié dans ce spec (affichage best-effort du JSON existant, ajouter la
-colonne eBay au dashboard est un suivi séparé si souhaité plus tard).
+`insert_ebay_snapshot`. `signal_entries` (la projection whitelist déjà
+construite dans `cmd_scan` pour le JSON dashboard) gagne le champ
+`ebay_growth_pct` — le champ sera donc présent dans `signals.json`, mais
+`web/public/index.html` n'est PAS modifié dans ce spec : la page ignorera
+simplement ce champ supplémentaire (elle ne lit que les clés qu'elle
+connaît déjà, aucune erreur). Ajouter une colonne eBay visible sur le
+dashboard est un suivi séparé si souhaité plus tard.
 
 ## Gestion d'erreurs
 
