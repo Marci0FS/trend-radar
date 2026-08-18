@@ -127,3 +127,22 @@ def get_phrase_mention_series(conn: sqlite3.Connection, phrase: str) -> list[tup
         (phrase,),
     ).fetchall()
     return [(r["window_start"], r["total"]) for r in rows]
+
+
+def insert_ebay_snapshot(
+    conn: sqlite3.Connection, keyword_id: int, date: str, listing_count: int, marketplace: str
+) -> None:
+    conn.execute(
+        """INSERT OR IGNORE INTO ebay_snapshots (keyword_id, date, listing_count, marketplace)
+           VALUES (?, ?, ?, ?)""",
+        (keyword_id, date, listing_count, marketplace),
+    )
+    conn.commit()
+
+
+def get_ebay_snapshot_series(conn: sqlite3.Connection, keyword_id: int) -> list[tuple[str, int]]:
+    rows = conn.execute(
+        "SELECT date, listing_count FROM ebay_snapshots WHERE keyword_id = ? ORDER BY date",
+        (keyword_id,),
+    ).fetchall()
+    return [(r["date"], r["listing_count"]) for r in rows]
