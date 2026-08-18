@@ -42,9 +42,22 @@ def compute_convergence(
         and reddit_avg_score >= thresholds["reddit_min_avg_score"]
     )
 
+    ebay_rows = conn.execute(
+        "SELECT date, listing_count FROM ebay_snapshots WHERE keyword_id = ? ORDER BY date",
+        (keyword_id,),
+    ).fetchall()
+    ebay_snapshots = [(r["date"], r["listing_count"]) for r in ebay_rows]
+    ebay_growth = growth_pct(ebay_snapshots, window_days=1)
+    signals_detected["ebay"] = ebay_growth >= thresholds["ebay_growth_pct"]
+
     sources_count = sum(1 for v in signals_detected.values() if v)
-    # Score = 10 points par source en convergence + bonus intensite (croissance trends, volume reddit)
-    convergence_score = sources_count * 10 + max(trends_growth, 0) * 0.1 + reddit_count * 0.5
+    # Score = 10 points par source en convergence + bonus intensite (croissance trends, volume reddit, croissance eBay)
+    convergence_score = (
+        sources_count * 10
+        + max(trends_growth, 0) * 0.1
+        + reddit_count * 0.5
+        + max(ebay_growth, 0) * 0.1
+    )
 
     return {
         "keyword_id": keyword_id,
@@ -56,6 +69,7 @@ def compute_convergence(
             "trends_growth_pct": round(trends_growth, 1),
             "reddit_post_count": reddit_count,
             "reddit_avg_score": round(reddit_avg_score, 1),
+            "ebay_growth_pct": round(ebay_growth, 1),
             "signals_detected": signals_detected,
         },
     }
