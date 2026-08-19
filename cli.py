@@ -177,6 +177,15 @@ def cmd_scan(watchlist: dict, publish_after: bool = False) -> None:
     conn.close()
     write_report(results)
 
+    if not results:
+        # Toutes les sources ont echoue pour tous les mots-cles (ex: Google
+        # Trends rate-limite en meme temps que les autres sources
+        # desactivees) : ne jamais publier une watchlist vide qui
+        # ecraserait les dernieres donnees valides connues sur le
+        # dashboard public. On garde signals.json tel quel.
+        print("Scan : aucun resultat exploitable, signals.json non modifie")
+        return
+
     signal_entries = [
         {
             "keyword": r["keyword"],
