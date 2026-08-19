@@ -1,8 +1,9 @@
 # trend-radar
 
 Veille de tendances autonome (produits/services en ligne à forte croissance),
-100% gratuite et self-hosted. Croise Google Trends et Reddit, ne remonte un
-signal fort que si au moins 2 sources convergent sur la même fenêtre de temps.
+100% gratuite et self-hosted. Croise Google Trends, Reddit et eBay (3e source
+optionnelle), ne remonte un signal fort que si au moins 2 sources convergent
+sur la même fenêtre de temps.
 
 ## Setup
 

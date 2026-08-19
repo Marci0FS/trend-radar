@@ -92,9 +92,17 @@ def fetch_listing_count(keyword: str, marketplace: str = "EBAY_FR") -> int:
         )
         resp.raise_for_status()
         data = resp.json()
+        if not isinstance(data, dict) or "total" not in data:
+            # Un champ 'total' absent (ex : reponse avec seulement 'warnings')
+            # est une condition d'erreur, pas une observation legitime de zero
+            # annonce — le distinguer evite de stocker un faux 0 qui ferait
+            # remonter un faux signal "FORT" au prochain scan (growth_pct
+            # traite avg_previous == 0 comme une croissance de +100%).
+            raise EbayError(
+                f"Reponse eBay sans champ 'total' pour '{keyword}' : {data!r}"
+            )
+        return int(data["total"])
     except requests.RequestException as exc:
         raise EbayError(f"Echec recherche eBay pour '{keyword}' : {exc}") from exc
-    except ValueError as exc:
+    except (TypeError, AttributeError, ValueError) as exc:
         raise EbayError(f"Reponse invalide du serveur eBay pour '{keyword}' : {exc}") from exc
-
-    return int(data.get("total", 0))

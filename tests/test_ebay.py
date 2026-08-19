@@ -80,6 +80,58 @@ def test_get_app_token_raises_ebay_error_on_http_failure(monkeypatch):
             ebay.get_app_token()
 
 
+def test_fetch_listing_count_raises_ebay_error_when_total_is_none(monkeypatch):
+    ebay._token_cache["PRODUCTION"] = ("cached-token", time.time() + 999)
+
+    mock_response = MagicMock()
+    mock_response.json.return_value = {"total": None}
+    mock_response.raise_for_status.return_value = None
+
+    with patch("collectors.ebay.requests.get", return_value=mock_response):
+        with pytest.raises(ebay.EbayError):
+            ebay.fetch_listing_count("led face mask")
+
+
+def test_fetch_listing_count_raises_ebay_error_when_body_is_a_list(monkeypatch):
+    ebay._token_cache["PRODUCTION"] = ("cached-token", time.time() + 999)
+
+    mock_response = MagicMock()
+    mock_response.json.return_value = ["not", "a", "dict"]
+    mock_response.raise_for_status.return_value = None
+
+    with patch("collectors.ebay.requests.get", return_value=mock_response):
+        with pytest.raises(ebay.EbayError):
+            ebay.fetch_listing_count("led face mask")
+
+
+def test_fetch_listing_count_raises_ebay_error_when_total_is_non_numeric(monkeypatch):
+    ebay._token_cache["PRODUCTION"] = ("cached-token", time.time() + 999)
+
+    mock_response = MagicMock()
+    mock_response.json.return_value = {"total": "abc"}
+    mock_response.raise_for_status.return_value = None
+
+    with patch("collectors.ebay.requests.get", return_value=mock_response):
+        with pytest.raises(ebay.EbayError):
+            ebay.fetch_listing_count("led face mask")
+
+
+def test_fetch_listing_count_raises_ebay_error_when_total_field_missing(monkeypatch):
+    """Un champ 'total' absent (reponse avec seulement 'warnings', par ex.) doit
+    lever EbayError plutot que d'etre silencieusement traite comme 0 annonce —
+    un faux 0 stocke en snapshot fabriquerait un faux signal de convergence
+    "FORT" au prochain scan (growth_pct : avg_previous == 0 => +100%)."""
+    ebay._token_cache["PRODUCTION"] = ("cached-token", time.time() + 999)
+
+    mock_response = MagicMock()
+    mock_response.json.return_value = {"warnings": [{"message": "quota exceeded"}]}
+    mock_response.raise_for_status.return_value = None
+
+    with patch("collectors.ebay.requests.get", return_value=mock_response):
+        with pytest.raises(ebay.EbayError):
+            ebay.fetch_listing_count("led face mask")
+
+
 def test_get_app_token_raises_ebay_error_on_missing_access_token_field(monkeypatch):
     monkeypatch.setenv("EBAY_CLIENT_ID", "test-id")
     monkeypatch.setenv("EBAY_CLIENT_SECRET", "test-secret")

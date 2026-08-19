@@ -258,10 +258,11 @@ def write_report(results: list[dict]) -> None:
         marker = "FORT" if r["sources_count"] >= 2 else "faible"
         lines.append(f"## [{marker}] {r['keyword']} ({r['category']})")
         lines.append(f"- Score convergence : **{r['convergence_score']}**")
-        lines.append(f"- Sources en accord : {r['sources_count']}/2")
+        lines.append(f"- Sources en accord : {r['sources_count']}/3")
         d = r["details"]
         lines.append(f"- Google Trends : {d['trends_growth_pct']}% de croissance")
         lines.append(f"- Reddit : {d['reddit_post_count']} posts, score moyen {d['reddit_avg_score']}")
+        lines.append(f"- eBay : {d['ebay_growth_pct']}% de croissance")
         lines.append("")
     REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
     REPORT_PATH.write_text("\n".join(lines), encoding="utf-8")
