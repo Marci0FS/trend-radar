@@ -58,6 +58,14 @@ def compute_convergence(
     aliexpress_growth = growth_pct(aliexpress_snapshots, window_days=1)
     signals_detected["aliexpress"] = aliexpress_growth >= thresholds["aliexpress_growth_pct"]
 
+    youtube_rows = conn.execute(
+        "SELECT date, view_count FROM youtube_snapshots WHERE keyword_id = ? ORDER BY date",
+        (keyword_id,),
+    ).fetchall()
+    youtube_snapshots = [(r["date"], r["view_count"]) for r in youtube_rows]
+    youtube_growth = growth_pct(youtube_snapshots, window_days=1)
+    signals_detected["youtube"] = youtube_growth >= thresholds["youtube_growth_pct"]
+
     sources_count = sum(1 for v in signals_detected.values() if v)
     # Score = 10 points par source en convergence + bonus intensite (croissance trends, volume reddit, croissance eBay, croissance AliExpress)
     convergence_score = (
@@ -66,6 +74,7 @@ def compute_convergence(
         + reddit_count * 0.5
         + max(ebay_growth, 0) * 0.1
         + max(aliexpress_growth, 0) * 0.1
+        + max(youtube_growth, 0) * 0.1
     )
 
     return {
@@ -80,6 +89,7 @@ def compute_convergence(
             "reddit_avg_score": round(reddit_avg_score, 1),
             "ebay_growth_pct": round(ebay_growth, 1),
             "aliexpress_growth_pct": round(aliexpress_growth, 1),
+            "youtube_growth_pct": round(youtube_growth, 1),
             "signals_detected": signals_detected,
         },
     }
