@@ -4,3 +4,4 @@ PyYAML
 spacy
 pytest
 python-dotenv
+requests

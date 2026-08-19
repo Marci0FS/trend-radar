@@ -18,6 +18,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+from collectors import ebay
 from collectors import google_trends
 from collectors import reddit as reddit_collector
 from discovery import extract, promote, reddit_scan, velocity
@@ -74,6 +75,16 @@ def cmd_scan(watchlist: dict, publish_after: bool = False) -> None:
         reddit_client = None
         print("Reddit : credentials manquants, collecte Reddit desactivee pour ce scan")
 
+    try:
+        ebay.get_app_token()
+        ebay_available = True
+    except KeyError:
+        ebay_available = False
+        print("eBay : credentials manquantes, collecte eBay desactivee pour ce scan")
+    except ebay.EbayError as exc:
+        ebay_available = False
+        print(f"eBay : authentification impossible, collecte eBay desactivee pour ce scan : {exc}")
+
     for category, cat_data in watchlist["categories"].items():
         subreddits = cat_data.get("subreddits", [])
         for keyword in cat_data["keywords"]:
@@ -103,6 +114,15 @@ def cmd_scan(watchlist: dict, publish_after: bool = False) -> None:
                 )
                 db.insert_reddit_posts(conn, keyword_id, posts)
 
+            if ebay_available:
+                marketplace = watchlist.get("ebay_marketplace", "EBAY_FR")
+                try:
+                    listing_count = ebay.fetch_listing_count(keyword, marketplace=marketplace)
+                    today = datetime.now(timezone.utc).date().isoformat()
+                    db.insert_ebay_snapshot(conn, keyword_id, today, listing_count, marketplace)
+                except ebay.EbayError as exc:
+                    print(f"  Echec eBay pour '{keyword}', continue sans ce signal : {exc}")
+
             result = compute_convergence(conn, keyword_id, thresholds)
             db.insert_signal(
                 conn,
@@ -127,6 +147,7 @@ def cmd_scan(watchlist: dict, publish_after: bool = False) -> None:
             "trends_growth_pct": r["details"]["trends_growth_pct"],
             "reddit_post_count": r["details"]["reddit_post_count"],
             "reddit_avg_score": r["details"]["reddit_avg_score"],
+            "ebay_growth_pct": r["details"]["ebay_growth_pct"],
         }
         for r in results
     ]
@@ -237,10 +258,11 @@ def write_report(results: list[dict]) -> None:
         marker = "FORT" if r["sources_count"] >= 2 else "faible"
         lines.append(f"## [{marker}] {r['keyword']} ({r['category']})")
         lines.append(f"- Score convergence : **{r['convergence_score']}**")
-        lines.append(f"- Sources en accord : {r['sources_count']}/2")
+        lines.append(f"- Sources en accord : {r['sources_count']}/3")
         d = r["details"]
         lines.append(f"- Google Trends : {d['trends_growth_pct']}% de croissance")
         lines.append(f"- Reddit : {d['reddit_post_count']} posts, score moyen {d['reddit_avg_score']}")
+        lines.append(f"- eBay : {d['ebay_growth_pct']}% de croissance")
         lines.append("")
     REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
     REPORT_PATH.write_text("\n".join(lines), encoding="utf-8")
