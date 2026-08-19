@@ -1,9 +1,9 @@
 # trend-radar
 
 Veille de tendances autonome (produits/services en ligne à forte croissance),
-100% gratuite et self-hosted. Croise Google Trends, Reddit et eBay (3e source
-optionnelle), ne remonte un signal fort que si au moins 2 sources convergent
-sur la même fenêtre de temps.
+100% gratuite et self-hosted. Croise Google Trends, Reddit, eBay et
+AliExpress (3e et 4e sources optionnelles), ne remonte un signal fort que
+si au moins 3 des 4 sources convergent sur la même fenêtre de temps.
 
 ## Setup
 
@@ -36,6 +36,46 @@ pour un usage en lecture seule comme celui-ci.
 
 Sans credentials, `scan` continue de fonctionner normalement, eBay est juste
 desactive pour cette source.
+
+### AliExpress (optionnel, 4e source de convergence)
+
+Contrairement a eBay, l'authentification AliExpress demande une etape
+manuelle unique dans un navigateur :
+
+1. Cree un compte sur le [programme d'affiliation AliExpress](https://portals.aliexpress.com/)
+   et une app sur l'Open Platform pour obtenir un `App Key` / `App Secret`.
+2. Autorise l'app (consentement OAuth dans le navigateur) pour obtenir un
+   `refresh_token` — cette etape ne se fait qu'une fois.
+3. Ajoute les trois valeurs a `.env` :
+
+```
+ALIEXPRESS_APP_KEY=ton_app_key
+ALIEXPRESS_APP_SECRET=ton_app_secret
+ALIEXPRESS_REFRESH_TOKEN=le_refresh_token_obtenu_a_l_etape_2
+```
+
+Sans credentials, `scan` continue de fonctionner normalement, AliExpress
+est juste desactive pour cette source (comme eBay et Reddit).
+
+**Le refresh_token peut expirer** apres plusieurs mois d'inactivite —
+si `scan` affiche "AliExpress : authentification impossible" de facon
+persistante, refais l'etape 2.
+
+**Premiere verification apres obtention des credentials reelles** : plusieurs
+details de l'integration (nom exact du champ de volume de ventes retourne
+par l'API — `volume` vs `lastest_volume` —, mais aussi l'URL de la gateway,
+le format du `timestamp` de signature, l'algorithme `sign_method` et le nom
+du parametre `session` portant l'access token, voir la docstring de
+`collectors/aliexpress.py` pour le detail complet) n'ont pas pu etre
+confirmes avant que le compte affilie existe. `python cli.py check` ne
+touche pas AliExpress (seulement Trends/Reddit) : lance plutot
+`python cli.py scan` apres avoir configure les credentials, et surveille la
+sortie standard pour une ligne du type `Echec AliExpress pour '<mot-cle>' ...`
+suivie d'un message `AliExpressError` (par ex. "sans champ
+'volume'/'lastest_volume'", "authentification impossible", etc.) — c'est le
+chemin de code qui exerce reellement le collecteur AliExpress et revele une
+hypothese fausse. Si un tel message apparait, inspecte la reponse reelle de
+l'API et ajuste `collectors/aliexpress.py` en consequence.
 
 Le fichier `.env` est chargé automatiquement au démarrage de la CLI
 (via `python-dotenv`).

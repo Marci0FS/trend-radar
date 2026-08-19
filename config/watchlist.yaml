@@ -54,6 +54,9 @@ categories:
 trends_timeframe: "today 3-m"
 trends_geo: "FR"
 ebay_marketplace: "EBAY_FR"
+aliexpress_ship_to: "FR"
+aliexpress_currency: "EUR"
+aliexpress_language: "fr"
 
 # Fenetre Reddit (praw time_filter: hour/day/week/month/year/all)
 reddit_time_filter: "month"
@@ -65,6 +68,7 @@ thresholds:
   reddit_min_posts: 3
   reddit_min_avg_score: 10
   ebay_growth_pct: 20
+  aliexpress_growth_pct: 20
 
 # Configuration du mode discovery (python cli.py discover) — detecte des
 # candidats sans mots-cles fournis a l'avance, a partir de l'activite Reddit.

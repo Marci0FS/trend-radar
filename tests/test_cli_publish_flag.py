@@ -82,7 +82,7 @@ def test_cmd_scan_writes_signals_json_and_publishes(tmp_path, monkeypatch):
 
     watchlist = {
         "categories": {"gadgets": {"keywords": ["test kw"], "subreddits": []}},
-        "thresholds": {"trends_growth_pct": 20, "reddit_min_posts": 3, "reddit_min_avg_score": 10, "ebay_growth_pct": 20},
+        "thresholds": {"trends_growth_pct": 20, "reddit_min_posts": 3, "reddit_min_avg_score": 10, "ebay_growth_pct": 20, "aliexpress_growth_pct": 20},
     }
 
     cli.cmd_scan(watchlist, publish_after=True)

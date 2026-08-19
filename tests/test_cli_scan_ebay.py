@@ -17,6 +17,7 @@ def _base_watchlist():
             "reddit_min_posts": 3,
             "reddit_min_avg_score": 10,
             "ebay_growth_pct": 20,
+            "aliexpress_growth_pct": 20,
         },
     }
 
