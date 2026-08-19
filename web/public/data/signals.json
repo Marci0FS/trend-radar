@@ -14,7 +14,7 @@
       "category": "gadgets",
       "convergence_score": 0.0,
       "sources_count": 0,
-      "trends_growth_pct": -27.0,
+      "trends_growth_pct": -41.0,
       "reddit_post_count": 0,
       "reddit_avg_score": 0
     },
@@ -32,16 +32,16 @@
       "category": "gadgets",
       "convergence_score": 0.0,
       "sources_count": 0,
-      "trends_growth_pct": -3.8,
+      "trends_growth_pct": -17.3,
       "reddit_post_count": 0,
       "reddit_avg_score": 0
     },
     {
       "keyword": "masque LED visage",
       "category": "beaute",
-      "convergence_score": 0.0,
+      "convergence_score": 1.12,
       "sources_count": 0,
-      "trends_growth_pct": -13.4,
+      "trends_growth_pct": 11.2,
       "reddit_post_count": 0,
       "reddit_avg_score": 0
     },
@@ -59,7 +59,7 @@
       "category": "beaute",
       "convergence_score": 0.0,
       "sources_count": 0,
-      "trends_growth_pct": -4.6,
+      "trends_growth_pct": -13.8,
       "reddit_post_count": 0,
       "reddit_avg_score": 0
     },
@@ -77,16 +77,16 @@
       "category": "maison",
       "convergence_score": 0.0,
       "sources_count": 0,
-      "trends_growth_pct": -24.4,
+      "trends_growth_pct": -26.7,
       "reddit_post_count": 0,
       "reddit_avg_score": 0
     },
     {
       "keyword": "robot aspirateur laveur",
       "category": "maison",
-      "convergence_score": 0.91,
+      "convergence_score": 1.33,
       "sources_count": 0,
-      "trends_growth_pct": 9.1,
+      "trends_growth_pct": 13.3,
       "reddit_post_count": 0,
       "reddit_avg_score": 0
     },
@@ -95,7 +95,7 @@
       "category": "fitness",
       "convergence_score": 0.0,
       "sources_count": 0,
-      "trends_growth_pct": -31.2,
+      "trends_growth_pct": -66.3,
       "reddit_post_count": 0,
       "reddit_avg_score": 0
     },
@@ -111,18 +111,18 @@
     {
       "keyword": "fontaine a eau chat",
       "category": "animaux",
-      "convergence_score": 0.34,
+      "convergence_score": 0.53,
       "sources_count": 0,
-      "trends_growth_pct": 3.4,
+      "trends_growth_pct": 5.3,
       "reddit_post_count": 0,
       "reddit_avg_score": 0
     },
     {
       "keyword": "GPS collier chien",
       "category": "animaux",
-      "convergence_score": 1.47,
+      "convergence_score": 0.37,
       "sources_count": 0,
-      "trends_growth_pct": 14.7,
+      "trends_growth_pct": 3.7,
       "reddit_post_count": 0,
       "reddit_avg_score": 0
     },
@@ -131,7 +131,7 @@
       "category": "enfants",
       "convergence_score": 0.0,
       "sources_count": 0,
-      "trends_growth_pct": -100.0,
+      "trends_growth_pct": 0.0,
       "reddit_post_count": 0,
       "reddit_avg_score": 0
     },
@@ -146,5 +146,5 @@
     }
   ],
   "discovery": [],
-  "last_updated": "2026-08-18T13:53:15.032238+00:00"
+  "last_updated": "2026-08-19T07:23:16.348085+00:00"
 }
