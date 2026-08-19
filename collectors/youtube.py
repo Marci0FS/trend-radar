@@ -33,6 +33,16 @@ class YouTubeError(RuntimeError):
     pass
 
 
+def _redact(message: str, secret: str) -> str:
+    """Retire toute occurrence de `secret` (ex. la cle API) d'un message
+    d'erreur avant qu'il ne soit affiche. requests integre l'URL complete
+    (avec la query string, donc la cle) dans le str() des exceptions
+    HTTPError/ConnectionError/RequestException : sans cette redaction, la
+    cle finirait sur stdout via cli.py::cmd_scan (voir README, "surveillez
+    stdout pour ces messages")."""
+    return message.replace(secret, "***") if secret else message
+
+
 def fetch_recent_view_count(keyword: str) -> int:
     """Retourne la somme des vues sur les 10 videos les plus vues publiees
     dans les 7 derniers jours pour ce mot-cle. Leve KeyError si
@@ -64,7 +74,9 @@ def fetch_recent_view_count(keyword: str) -> int:
         search_resp.raise_for_status()
         video_ids = _extract_video_ids(search_resp.json())
     except requests.RequestException as exc:
-        raise YouTubeError(f"Echec recherche YouTube pour '{keyword}' : {exc}") from exc
+        raise YouTubeError(
+            f"Echec recherche YouTube pour '{keyword}' : {_redact(str(exc), key)}"
+        ) from exc
     except (TypeError, AttributeError, ValueError) as exc:
         raise YouTubeError(
             f"Reponse de recherche YouTube invalide pour '{keyword}' : {exc}"
@@ -83,7 +95,7 @@ def fetch_recent_view_count(keyword: str) -> int:
         return _sum_view_counts(videos_resp.json(), keyword)
     except requests.RequestException as exc:
         raise YouTubeError(
-            f"Echec recuperation des vues YouTube pour '{keyword}' : {exc}"
+            f"Echec recuperation des vues YouTube pour '{keyword}' : {_redact(str(exc), key)}"
         ) from exc
     except (TypeError, AttributeError, ValueError) as exc:
         raise YouTubeError(
@@ -132,6 +144,6 @@ def _sum_view_counts(data, keyword: str) -> int:
             total += int(view_count)
         except (TypeError, ValueError) as exc:
             raise YouTubeError(
-                f"Valeur de viewCount non numerique pour '{keyword}' : {view_count!r}"
+                f"Valeur de viewCount non numerique pour '{keyword}' : {repr(view_count)[:200]}"
             ) from exc
     return total

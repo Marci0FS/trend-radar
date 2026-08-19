@@ -22,7 +22,7 @@ def _result(sources_count: int, convergence_score: float = 10.0) -> dict:
 
 
 def test_write_report_marks_two_sources_as_faible(tmp_path, monkeypatch):
-    """Le seuil FORT a ete releve de >= 2 a >= 3 sources sur 4 (branche
+    """Le seuil FORT a ete releve de >= 2 a >= 3 sources sur 5 (branche
     'wire aliexpress' du feature). Un resultat avec sources_count == 2 ne
     doit plus jamais produire [FORT] : c'est la regression que ce test
     protege contre un retour silencieux a l'ancien seuil."""
@@ -57,3 +57,14 @@ def test_write_report_includes_aliexpress_line(tmp_path, monkeypatch):
 
     text = (tmp_path / "report.md").read_text(encoding="utf-8")
     assert "AliExpress : 8.0% de croissance" in text
+
+
+def test_write_report_includes_youtube_line(tmp_path, monkeypatch):
+    """La ligne de rapport YouTube (nouvelle avec cette source) doit bien
+    apparaitre dans le Markdown genere, avec le pourcentage de croissance."""
+    monkeypatch.setattr(cli, "REPORT_PATH", tmp_path / "report.md")
+
+    cli.write_report([_result(sources_count=4)])
+
+    text = (tmp_path / "report.md").read_text(encoding="utf-8")
+    assert "YouTube : 3.0% de croissance" in text

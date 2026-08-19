@@ -97,10 +97,9 @@ def cmd_scan(watchlist: dict, publish_after: bool = False) -> None:
         aliexpress_available = False
         print(f"AliExpress : authentification impossible, collecte AliExpress desactivee pour ce scan : {exc}")
 
-    try:
-        os.environ["YOUTUBE_API_KEY"]
+    if os.environ.get("YOUTUBE_API_KEY"):
         youtube_available = True
-    except KeyError:
+    else:
         youtube_available = False
         print("YouTube : cle API manquante, collecte YouTube desactivee pour ce scan")
 

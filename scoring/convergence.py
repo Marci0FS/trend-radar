@@ -1,7 +1,7 @@
 """Calcul du score de convergence multi-source.
 
 Une tendance ne remonte comme "signal fort" que si elle apparait sur
-au moins 3 sources distinctes sur 4 dans la fenetre de temps consideree.
+au moins 3 sources distinctes sur 5 dans la fenetre de temps consideree.
 Seuils et ponderation volontairement simples pour le MVP (config/watchlist.yaml) ;
 a affiner une fois qu'on a du recul sur des cas reels.
 """
@@ -67,7 +67,7 @@ def compute_convergence(
     signals_detected["youtube"] = youtube_growth >= thresholds["youtube_growth_pct"]
 
     sources_count = sum(1 for v in signals_detected.values() if v)
-    # Score = 10 points par source en convergence + bonus intensite (croissance trends, volume reddit, croissance eBay, croissance AliExpress)
+    # Score = 10 points par source en convergence + bonus intensite (croissance trends, volume reddit, croissance eBay, croissance AliExpress, croissance YouTube)
     convergence_score = (
         sources_count * 10
         + max(trends_growth, 0) * 0.1

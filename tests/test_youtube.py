@@ -124,6 +124,34 @@ def test_fetch_recent_view_count_raises_youtube_error_on_malformed_search_respon
             youtube.fetch_recent_view_count("led face mask")
 
 
+def test_fetch_recent_view_count_redacts_api_key_from_error_message(monkeypatch):
+    """requests integre l'URL complete (avec la query string, donc la cle
+    API) dans le str() de RequestException. Le message YouTubeError qui en
+    resulte est imprime tel quel sur stdout par cli.py::cmd_scan (voir
+    README) : la cle ne doit donc jamais apparaitre dans str(YouTubeError),
+    meme quand le message d'erreur brut de requests la contient."""
+    fake_key = "AIzaSyREAL_SECRET_KEY"
+    monkeypatch.setenv("YOUTUBE_API_KEY", fake_key)
+
+    import requests as requests_module
+
+    error_message = (
+        f"HTTPSConnectionPool(host='www.googleapis.com', port=443): Max retries "
+        f"exceeded with url: https://www.googleapis.com/youtube/v3/search?"
+        f"key={fake_key}&q=test"
+    )
+
+    with patch(
+        "collectors.youtube.requests.get",
+        side_effect=requests_module.exceptions.ConnectionError(error_message),
+    ):
+        with pytest.raises(youtube.YouTubeError) as exc_info:
+            youtube.fetch_recent_view_count("led face mask")
+
+    assert fake_key not in str(exc_info.value)
+    assert "Echec recherche YouTube" in str(exc_info.value)
+
+
 def test_fetch_recent_view_count_raises_youtube_error_when_view_count_non_numeric(monkeypatch):
     monkeypatch.setenv("YOUTUBE_API_KEY", "test-key")
 

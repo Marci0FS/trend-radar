@@ -59,6 +59,27 @@ def test_cmd_scan_skips_youtube_when_credentials_missing(tmp_path, monkeypatch):
     assert data["watchlist"][0]["youtube_growth_pct"] == 0.0
 
 
+def test_cmd_scan_skips_youtube_when_api_key_is_empty_string(tmp_path, monkeypatch):
+    """.env.example expedie YOUTUBE_API_KEY= (valeur vide) et le README dit de
+    faire `cp .env.example .env` : un utilisateur qui n'a pas encore rempli sa
+    cle se retrouve avec une variable d'env presente mais vide via
+    python-dotenv. Le pre-check doit tester la valeur (truthiness), pas
+    seulement la presence de la cle, sinon chaque mot-cle declenche un appel
+    YouTube voue a l'echec au lieu d'un message clair unique en debut de scan."""
+    _patch_common(tmp_path, monkeypatch)
+    monkeypatch.setenv("YOUTUBE_API_KEY", "")
+
+    def _fail_if_called(keyword, **kwargs):
+        raise AssertionError("should not be called")
+
+    monkeypatch.setattr(youtube, "fetch_recent_view_count", _fail_if_called)
+
+    cli.cmd_scan(_base_watchlist())
+
+    data = json.loads((tmp_path / "signals.json").read_text())
+    assert data["watchlist"][0]["youtube_growth_pct"] == 0.0
+
+
 def test_cmd_scan_continues_when_youtube_fails_for_one_keyword(tmp_path, monkeypatch):
     _patch_common(tmp_path, monkeypatch)
 
