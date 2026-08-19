@@ -22,6 +22,7 @@ from collectors import aliexpress
 from collectors import ebay
 from collectors import google_trends
 from collectors import reddit as reddit_collector
+from collectors import youtube
 from discovery import extract, promote, reddit_scan, velocity
 from scoring.convergence import compute_convergence
 from storage import db
@@ -96,6 +97,13 @@ def cmd_scan(watchlist: dict, publish_after: bool = False) -> None:
         aliexpress_available = False
         print(f"AliExpress : authentification impossible, collecte AliExpress desactivee pour ce scan : {exc}")
 
+    try:
+        os.environ["YOUTUBE_API_KEY"]
+        youtube_available = True
+    except KeyError:
+        youtube_available = False
+        print("YouTube : cle API manquante, collecte YouTube desactivee pour ce scan")
+
     for category, cat_data in watchlist["categories"].items():
         subreddits = cat_data.get("subreddits", [])
         for keyword in cat_data["keywords"]:
@@ -147,6 +155,14 @@ def cmd_scan(watchlist: dict, publish_after: bool = False) -> None:
                 except aliexpress.AliExpressError as exc:
                     print(f"  Echec AliExpress pour '{keyword}', continue sans ce signal : {exc}")
 
+            if youtube_available:
+                try:
+                    view_count = youtube.fetch_recent_view_count(keyword)
+                    today = datetime.now(timezone.utc).date().isoformat()
+                    db.insert_youtube_snapshot(conn, keyword_id, today, view_count)
+                except youtube.YouTubeError as exc:
+                    print(f"  Echec YouTube pour '{keyword}', continue sans ce signal : {exc}")
+
             result = compute_convergence(conn, keyword_id, thresholds)
             db.insert_signal(
                 conn,
@@ -173,6 +189,7 @@ def cmd_scan(watchlist: dict, publish_after: bool = False) -> None:
             "reddit_avg_score": r["details"]["reddit_avg_score"],
             "ebay_growth_pct": r["details"]["ebay_growth_pct"],
             "aliexpress_growth_pct": r["details"]["aliexpress_growth_pct"],
+            "youtube_growth_pct": r["details"]["youtube_growth_pct"],
         }
         for r in results
     ]
@@ -283,12 +300,13 @@ def write_report(results: list[dict]) -> None:
         marker = "FORT" if r["sources_count"] >= 3 else "faible"
         lines.append(f"## [{marker}] {r['keyword']} ({r['category']})")
         lines.append(f"- Score convergence : **{r['convergence_score']}**")
-        lines.append(f"- Sources en accord : {r['sources_count']}/4")
+        lines.append(f"- Sources en accord : {r['sources_count']}/5")
         d = r["details"]
         lines.append(f"- Google Trends : {d['trends_growth_pct']}% de croissance")
         lines.append(f"- Reddit : {d['reddit_post_count']} posts, score moyen {d['reddit_avg_score']}")
         lines.append(f"- eBay : {d['ebay_growth_pct']}% de croissance")
         lines.append(f"- AliExpress : {d['aliexpress_growth_pct']}% de croissance")
+        lines.append(f"- YouTube : {d['youtube_growth_pct']}% de croissance")
         lines.append("")
     REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
     REPORT_PATH.write_text("\n".join(lines), encoding="utf-8")
