@@ -29,7 +29,7 @@ def test_cmd_scan_skips_keyword_on_trends_failure(tmp_path, monkeypatch):
         "categories": {
             "gadgets": {"keywords": ["bad kw", "good kw"], "subreddits": []},
         },
-        "thresholds": {"trends_growth_pct": 20, "reddit_min_posts": 3, "reddit_min_avg_score": 10, "ebay_growth_pct": 20, "aliexpress_growth_pct": 20},
+        "thresholds": {"trends_growth_pct": 20, "reddit_min_posts": 3, "reddit_min_avg_score": 10, "ebay_growth_pct": 20, "aliexpress_growth_pct": 20, "youtube_growth_pct": 20},
     }
 
     cli.cmd_scan(watchlist)
