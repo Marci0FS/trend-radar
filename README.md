@@ -61,14 +61,21 @@ est juste desactive pour cette source (comme eBay et Reddit).
 si `scan` affiche "AliExpress : authentification impossible" de facon
 persistante, refais l'etape 2.
 
-**Premiere verification apres obtention des credentials reelles** : le
-nom exact du champ de volume de ventes retourne par l'API
-(`volume` vs `lastest_volume`) n'a pas pu etre confirme avant que le
-compte affilie existe. Lance `python cli.py check "un mot-cle test"`
-apres avoir configure les credentials et verifie dans les logs qu'aucune
-`AliExpressError` de type "sans champ 'volume'/'lastest_volume'" n'apparait —
-si c'est le cas, la reponse reelle de l'API doit etre inspectee et
-`collectors/aliexpress.py::_sum_volume` ajuste au nom de champ reel.
+**Premiere verification apres obtention des credentials reelles** : plusieurs
+details de l'integration (nom exact du champ de volume de ventes retourne
+par l'API — `volume` vs `lastest_volume` —, mais aussi l'URL de la gateway,
+le format du `timestamp` de signature, l'algorithme `sign_method` et le nom
+du parametre `session` portant l'access token, voir la docstring de
+`collectors/aliexpress.py` pour le detail complet) n'ont pas pu etre
+confirmes avant que le compte affilie existe. `python cli.py check` ne
+touche pas AliExpress (seulement Trends/Reddit) : lance plutot
+`python cli.py scan` apres avoir configure les credentials, et surveille la
+sortie standard pour une ligne du type `Echec AliExpress pour '<mot-cle>' ...`
+suivie d'un message `AliExpressError` (par ex. "sans champ
+'volume'/'lastest_volume'", "authentification impossible", etc.) — c'est le
+chemin de code qui exerce reellement le collecteur AliExpress et revele une
+hypothese fausse. Si un tel message apparait, inspecte la reponse reelle de
+l'API et ajuste `collectors/aliexpress.py` en consequence.
 
 Le fichier `.env` est chargé automatiquement au démarrage de la CLI
 (via `python-dotenv`).

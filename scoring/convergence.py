@@ -1,7 +1,7 @@
 """Calcul du score de convergence multi-source.
 
 Une tendance ne remonte comme "signal fort" que si elle apparait sur
-au moins 2 sources distinctes dans la fenetre de temps consideree.
+au moins 3 sources distinctes sur 4 dans la fenetre de temps consideree.
 Seuils et ponderation volontairement simples pour le MVP (config/watchlist.yaml) ;
 a affiner une fois qu'on a du recul sur des cas reels.
 """

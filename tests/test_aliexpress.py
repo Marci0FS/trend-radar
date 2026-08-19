@@ -164,6 +164,43 @@ def test_fetch_sales_volume_raises_aliexpress_error_on_malformed_structure(monke
             aliexpress.fetch_sales_volume("led face mask")
 
 
+def test_fetch_sales_volume_raises_aliexpress_error_when_volume_is_non_numeric(monkeypatch):
+    """Une valeur de volume presente mais non convertible en int (chaine
+    non numerique, par ex.) doit lever AliExpressError plutot que planter
+    avec une ValueError brute ou etre traitee comme 0 (meme precaution que
+    collectors/ebay.py::test_fetch_listing_count_raises_ebay_error_when_total_is_non_numeric)."""
+    monkeypatch.setenv("ALIEXPRESS_APP_KEY", "test-key")
+    monkeypatch.setenv("ALIEXPRESS_APP_SECRET", "test-secret")
+    monkeypatch.setattr(aliexpress, "_cached_access_token", "cached-token")
+
+    mock_response = MagicMock()
+    mock_response.json.return_value = _query_response([{"volume": "abc"}])
+    mock_response.raise_for_status.return_value = None
+
+    with patch("collectors.aliexpress.requests.get", return_value=mock_response):
+        with pytest.raises(aliexpress.AliExpressError):
+            aliexpress.fetch_sales_volume("led face mask")
+
+
+def test_fetch_sales_volume_raises_aliexpress_error_when_product_field_is_not_a_list(monkeypatch):
+    """Si le champ 'product' de la reponse n'est pas une liste (un dict unique,
+    par ex., comme peut le renvoyer un gateway TOP-style quand un seul produit
+    correspond), on doit lever AliExpressError plutot que planter ou iterer sur
+    autre chose que des produits (meme precaution que
+    collectors/ebay.py::test_fetch_listing_count_raises_ebay_error_when_body_is_a_list)."""
+    monkeypatch.setenv("ALIEXPRESS_APP_KEY", "test-key")
+    monkeypatch.setenv("ALIEXPRESS_APP_SECRET", "test-secret")
+    monkeypatch.setattr(aliexpress, "_cached_access_token", "cached-token")
+
+    mock_response = MagicMock()
+    mock_response.json.return_value = _query_response({"volume": 100})
+    mock_response.raise_for_status.return_value = None
+
+    with patch("collectors.aliexpress.requests.get", return_value=mock_response):
+        with pytest.raises(aliexpress.AliExpressError):
+            aliexpress.fetch_sales_volume("led face mask")
+
+
 def test_fetch_sales_volume_raises_aliexpress_error_on_http_failure(monkeypatch):
     monkeypatch.setenv("ALIEXPRESS_APP_KEY", "test-key")
     monkeypatch.setenv("ALIEXPRESS_APP_SECRET", "test-secret")

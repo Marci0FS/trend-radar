@@ -17,11 +17,24 @@ Chaque requete est signee : MD5(app_secret + parametres_tries_concatenes
 + app_secret), convention de signature de l'AliExpress Open Platform
 gateway (heritee des API TOP-style historiques).
 
-Note d'implementation : le nom exact du champ de volume ('volume' vs
-'lastest_volume') et le nom exact de la methode de refresh de token
-('taobao.top.auth.token.refresh') sont notre meilleure lecture de la doc
-publique — aucun compte reel n'existe encore pour verifier. A confirmer
-lors du premier scan reel une fois les credentials obtenues.
+Note d'implementation : plusieurs details de ce module sont notre meilleure
+lecture de la doc publique, non verifies contre un compte reel (aucun
+compte affilie n'existait encore au moment de l'ecriture) — a confirmer
+lors du premier scan reel une fois les credentials obtenues :
+- le nom exact du champ de volume ('volume' vs 'lastest_volume') ;
+- le nom exact de la methode de refresh de token
+  ('taobao.top.auth.token.refresh') ;
+- l'URL de la gateway ('api-sg.aliexpress.com/sync') ;
+- le format du 'timestamp' utilise dans la signature
+  ('%Y-%m-%d %H:%M:%S' ; certaines gateways de style TOP attendent un
+  epoch en millisecondes a la place) ;
+- l'algorithme de signature ('sign_method: md5' ; certaines gateways plus
+  recentes attendent 'sha256') ;
+- le nom du parametre portant l'access token ('session').
+
+Si le premier scan reel echoue avec "authentification impossible" ou une
+AliExpressError opaque, ce sont les points a verifier en premier contre la
+reponse reelle de l'API.
 """
 from __future__ import annotations
 
@@ -86,7 +99,7 @@ def get_access_token() -> str:
         data = resp.json()
         if not isinstance(data, dict) or "access_token" not in data:
             raise AliExpressError(
-                f"Reponse AliExpress sans champ 'access_token' au refresh : {data!r}"
+                f"Reponse AliExpress sans champ 'access_token' au refresh : {repr(data)[:200]}"
             )
         token = str(data["access_token"])
     except requests.RequestException as exc:
@@ -143,9 +156,11 @@ def _extract_products(data) -> list[dict]:
         result = data["aliexpress_affiliate_product_query_response"]["resp_result"]["result"]
         products = result["products"]["product"]
     except (KeyError, TypeError) as exc:
-        raise AliExpressError(f"Structure de reponse AliExpress inattendue : {data!r}") from exc
+        raise AliExpressError(
+            f"Structure de reponse AliExpress inattendue : {repr(data)[:200]}"
+        ) from exc
     if not isinstance(products, list):
-        raise AliExpressError(f"Champ 'product' n'est pas une liste : {products!r}")
+        raise AliExpressError(f"Champ 'product' n'est pas une liste : {repr(products)[:200]}")
     return products
 
 
@@ -155,7 +170,8 @@ def _sum_volume(products: list[dict], keyword: str) -> int:
         volume = product.get("volume", product.get("lastest_volume"))
         if volume is None:
             raise AliExpressError(
-                f"Produit AliExpress sans champ 'volume'/'lastest_volume' pour '{keyword}' : {product!r}"
+                f"Produit AliExpress sans champ 'volume'/'lastest_volume' pour "
+                f"'{keyword}' : {repr(product)[:200]}"
             )
         try:
             total += int(volume)
