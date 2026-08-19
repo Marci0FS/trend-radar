@@ -1,9 +1,9 @@
 # trend-radar
 
 Veille de tendances autonome (produits/services en ligne à forte croissance),
-100% gratuite et self-hosted. Croise Google Trends, Reddit et eBay (3e source
-optionnelle), ne remonte un signal fort que si au moins 2 sources convergent
-sur la même fenêtre de temps.
+100% gratuite et self-hosted. Croise Google Trends, Reddit, eBay et
+AliExpress (3e et 4e sources optionnelles), ne remonte un signal fort que
+si au moins 3 des 4 sources convergent sur la même fenêtre de temps.
 
 ## Setup
 
@@ -36,6 +36,39 @@ pour un usage en lecture seule comme celui-ci.
 
 Sans credentials, `scan` continue de fonctionner normalement, eBay est juste
 desactive pour cette source.
+
+### AliExpress (optionnel, 4e source de convergence)
+
+Contrairement a eBay, l'authentification AliExpress demande une etape
+manuelle unique dans un navigateur :
+
+1. Cree un compte sur le [programme d'affiliation AliExpress](https://portals.aliexpress.com/)
+   et une app sur l'Open Platform pour obtenir un `App Key` / `App Secret`.
+2. Autorise l'app (consentement OAuth dans le navigateur) pour obtenir un
+   `refresh_token` — cette etape ne se fait qu'une fois.
+3. Ajoute les trois valeurs a `.env` :
+
+```
+ALIEXPRESS_APP_KEY=ton_app_key
+ALIEXPRESS_APP_SECRET=ton_app_secret
+ALIEXPRESS_REFRESH_TOKEN=le_refresh_token_obtenu_a_l_etape_2
+```
+
+Sans credentials, `scan` continue de fonctionner normalement, AliExpress
+est juste desactive pour cette source (comme eBay et Reddit).
+
+**Le refresh_token peut expirer** apres plusieurs mois d'inactivite —
+si `scan` affiche "AliExpress : authentification impossible" de facon
+persistante, refais l'etape 2.
+
+**Premiere verification apres obtention des credentials reelles** : le
+nom exact du champ de volume de ventes retourne par l'API
+(`volume` vs `lastest_volume`) n'a pas pu etre confirme avant que le
+compte affilie existe. Lance `python cli.py check "un mot-cle test"`
+apres avoir configure les credentials et verifie dans les logs qu'aucune
+`AliExpressError` de type "sans champ 'volume'/'lastest_volume'" n'apparait —
+si c'est le cas, la reponse reelle de l'API doit etre inspectee et
+`collectors/aliexpress.py::_sum_volume` ajuste au nom de champ reel.
 
 Le fichier `.env` est chargé automatiquement au démarrage de la CLI
 (via `python-dotenv`).
