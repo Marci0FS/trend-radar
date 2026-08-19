@@ -64,8 +64,29 @@ CREATE TABLE IF NOT EXISTS ebay_snapshots (
     UNIQUE(keyword_id, date, marketplace)
 );
 
+CREATE TABLE IF NOT EXISTS aliexpress_snapshots (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    keyword_id INTEGER NOT NULL REFERENCES keywords(id),
+    date TEXT NOT NULL,
+    sales_volume INTEGER NOT NULL,
+    marketplace TEXT,
+    collected_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(keyword_id, date, marketplace)
+);
+
+CREATE TABLE IF NOT EXISTS youtube_snapshots (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    keyword_id INTEGER NOT NULL REFERENCES keywords(id),
+    date TEXT NOT NULL,
+    view_count INTEGER NOT NULL,
+    collected_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(keyword_id, date)
+);
+
 CREATE INDEX IF NOT EXISTS idx_trends_keyword ON google_trends_snapshots(keyword_id);
 CREATE INDEX IF NOT EXISTS idx_reddit_keyword ON reddit_signals(keyword_id);
 CREATE INDEX IF NOT EXISTS idx_signals_keyword ON signals(keyword_id);
 CREATE INDEX IF NOT EXISTS idx_phrase_mentions_phrase ON phrase_mentions(phrase);
 CREATE INDEX IF NOT EXISTS idx_ebay_keyword ON ebay_snapshots(keyword_id);
+CREATE INDEX IF NOT EXISTS idx_aliexpress_keyword ON aliexpress_snapshots(keyword_id);
+CREATE INDEX IF NOT EXISTS idx_youtube_keyword ON youtube_snapshots(keyword_id);

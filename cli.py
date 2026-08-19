@@ -18,9 +18,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+from collectors import aliexpress
 from collectors import ebay
 from collectors import google_trends
 from collectors import reddit as reddit_collector
+from collectors import youtube
 from discovery import extract, promote, reddit_scan, velocity
 from scoring.convergence import compute_convergence
 from storage import db
@@ -85,6 +87,22 @@ def cmd_scan(watchlist: dict, publish_after: bool = False) -> None:
         ebay_available = False
         print(f"eBay : authentification impossible, collecte eBay desactivee pour ce scan : {exc}")
 
+    try:
+        aliexpress.get_access_token()
+        aliexpress_available = True
+    except KeyError:
+        aliexpress_available = False
+        print("AliExpress : credentials manquantes, collecte AliExpress desactivee pour ce scan")
+    except aliexpress.AliExpressError as exc:
+        aliexpress_available = False
+        print(f"AliExpress : authentification impossible, collecte AliExpress desactivee pour ce scan : {exc}")
+
+    if os.environ.get("YOUTUBE_API_KEY"):
+        youtube_available = True
+    else:
+        youtube_available = False
+        print("YouTube : cle API manquante, collecte YouTube desactivee pour ce scan")
+
     for category, cat_data in watchlist["categories"].items():
         subreddits = cat_data.get("subreddits", [])
         for keyword in cat_data["keywords"]:
@@ -123,6 +141,27 @@ def cmd_scan(watchlist: dict, publish_after: bool = False) -> None:
                 except ebay.EbayError as exc:
                     print(f"  Echec eBay pour '{keyword}', continue sans ce signal : {exc}")
 
+            if aliexpress_available:
+                ship_to = watchlist.get("aliexpress_ship_to", "FR")
+                currency = watchlist.get("aliexpress_currency", "EUR")
+                language = watchlist.get("aliexpress_language", "fr")
+                try:
+                    sales_volume = aliexpress.fetch_sales_volume(
+                        keyword, ship_to=ship_to, currency=currency, language=language
+                    )
+                    today = datetime.now(timezone.utc).date().isoformat()
+                    db.insert_aliexpress_snapshot(conn, keyword_id, today, sales_volume, ship_to)
+                except aliexpress.AliExpressError as exc:
+                    print(f"  Echec AliExpress pour '{keyword}', continue sans ce signal : {exc}")
+
+            if youtube_available:
+                try:
+                    view_count = youtube.fetch_recent_view_count(keyword)
+                    today = datetime.now(timezone.utc).date().isoformat()
+                    db.insert_youtube_snapshot(conn, keyword_id, today, view_count)
+                except youtube.YouTubeError as exc:
+                    print(f"  Echec YouTube pour '{keyword}', continue sans ce signal : {exc}")
+
             result = compute_convergence(conn, keyword_id, thresholds)
             db.insert_signal(
                 conn,
@@ -148,6 +187,8 @@ def cmd_scan(watchlist: dict, publish_after: bool = False) -> None:
             "reddit_post_count": r["details"]["reddit_post_count"],
             "reddit_avg_score": r["details"]["reddit_avg_score"],
             "ebay_growth_pct": r["details"]["ebay_growth_pct"],
+            "aliexpress_growth_pct": r["details"]["aliexpress_growth_pct"],
+            "youtube_growth_pct": r["details"]["youtube_growth_pct"],
         }
         for r in results
     ]
@@ -255,14 +296,16 @@ def write_report(results: list[dict]) -> None:
     results_sorted = sorted(results, key=lambda r: r["convergence_score"], reverse=True)
     lines = ["# Rapport de veille — trend-radar", ""]
     for r in results_sorted:
-        marker = "FORT" if r["sources_count"] >= 2 else "faible"
+        marker = "FORT" if r["sources_count"] >= 3 else "faible"
         lines.append(f"## [{marker}] {r['keyword']} ({r['category']})")
         lines.append(f"- Score convergence : **{r['convergence_score']}**")
-        lines.append(f"- Sources en accord : {r['sources_count']}/3")
+        lines.append(f"- Sources en accord : {r['sources_count']}/5")
         d = r["details"]
         lines.append(f"- Google Trends : {d['trends_growth_pct']}% de croissance")
         lines.append(f"- Reddit : {d['reddit_post_count']} posts, score moyen {d['reddit_avg_score']}")
         lines.append(f"- eBay : {d['ebay_growth_pct']}% de croissance")
+        lines.append(f"- AliExpress : {d['aliexpress_growth_pct']}% de croissance")
+        lines.append(f"- YouTube : {d['youtube_growth_pct']}% de croissance")
         lines.append("")
     REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
     REPORT_PATH.write_text("\n".join(lines), encoding="utf-8")

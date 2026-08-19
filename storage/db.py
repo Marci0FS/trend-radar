@@ -146,3 +146,41 @@ def get_ebay_snapshot_series(conn: sqlite3.Connection, keyword_id: int) -> list[
         (keyword_id,),
     ).fetchall()
     return [(r["date"], r["listing_count"]) for r in rows]
+
+
+def insert_aliexpress_snapshot(
+    conn: sqlite3.Connection, keyword_id: int, date: str, sales_volume: int, marketplace: str
+) -> None:
+    conn.execute(
+        """INSERT OR IGNORE INTO aliexpress_snapshots (keyword_id, date, sales_volume, marketplace)
+           VALUES (?, ?, ?, ?)""",
+        (keyword_id, date, sales_volume, marketplace),
+    )
+    conn.commit()
+
+
+def get_aliexpress_snapshot_series(conn: sqlite3.Connection, keyword_id: int) -> list[tuple[str, int]]:
+    rows = conn.execute(
+        "SELECT date, sales_volume FROM aliexpress_snapshots WHERE keyword_id = ? ORDER BY date",
+        (keyword_id,),
+    ).fetchall()
+    return [(r["date"], r["sales_volume"]) for r in rows]
+
+
+def insert_youtube_snapshot(
+    conn: sqlite3.Connection, keyword_id: int, date: str, view_count: int
+) -> None:
+    conn.execute(
+        """INSERT OR IGNORE INTO youtube_snapshots (keyword_id, date, view_count)
+           VALUES (?, ?, ?)""",
+        (keyword_id, date, view_count),
+    )
+    conn.commit()
+
+
+def get_youtube_snapshot_series(conn: sqlite3.Connection, keyword_id: int) -> list[tuple[str, int]]:
+    rows = conn.execute(
+        "SELECT date, view_count FROM youtube_snapshots WHERE keyword_id = ? ORDER BY date",
+        (keyword_id,),
+    ).fetchall()
+    return [(r["date"], r["view_count"]) for r in rows]
