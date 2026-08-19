@@ -69,6 +69,7 @@ thresholds:
   reddit_min_avg_score: 10
   ebay_growth_pct: 20
   aliexpress_growth_pct: 20
+  youtube_growth_pct: 20
 
 # Configuration du mode discovery (python cli.py discover) — detecte des
 # candidats sans mots-cles fournis a l'avance, a partir de l'activite Reddit.

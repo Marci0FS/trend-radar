@@ -1,9 +1,10 @@
 # trend-radar
 
 Veille de tendances autonome (produits/services en ligne à forte croissance),
-100% gratuite et self-hosted. Croise Google Trends, Reddit, eBay et
-AliExpress (3e et 4e sources optionnelles), ne remonte un signal fort que
-si au moins 3 des 4 sources convergent sur la même fenêtre de temps.
+100% gratuite et self-hosted. Croise Google Trends, Reddit, eBay,
+AliExpress et YouTube (3e, 4e et 5e sources optionnelles), ne remonte un
+signal fort que si au moins 3 des 5 sources convergent sur la même
+fenêtre de temps.
 
 ## Setup
 
@@ -76,6 +77,29 @@ suivie d'un message `AliExpressError` (par ex. "sans champ
 chemin de code qui exerce reellement le collecteur AliExpress et revele une
 hypothese fausse. Si un tel message apparait, inspecte la reponse reelle de
 l'API et ajuste `collectors/aliexpress.py` en consequence.
+
+### YouTube (optionnel, 5e source de convergence)
+
+L'authentification la plus simple des 5 sources — une seule clé API,
+pas d'OAuth :
+
+1. Crée un projet sur la [Google Cloud Console](https://console.cloud.google.com/)
+   (gratuit, pas de carte bancaire requise).
+2. Active la "YouTube Data API v3" dans la bibliothèque d'API du projet.
+3. Crée une clé API dans "Identifiants" (Credentials).
+4. Ajoute-la à `.env` :
+
+```
+YOUTUBE_API_KEY=ta_cle_api
+```
+
+Sans credentials, `scan` continue de fonctionner normalement, YouTube est
+juste désactivé pour cette source (comme les autres sources optionnelles).
+
+**Quota** : le plan gratuit permet ~100 recherches par jour
+(`search.list` coûte 100 unités sur un quota de 10 000/jour, plafonné à
+100 appels/jour) — largement suffisant pour un scan quotidien de la
+watchlist actuelle (16 mots-clés = 16 appels).
 
 Le fichier `.env` est chargé automatiquement au démarrage de la CLI
 (via `python-dotenv`).
