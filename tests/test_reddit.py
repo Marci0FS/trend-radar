@@ -5,6 +5,28 @@ import pytest
 from collectors import reddit
 
 
+def test_get_client_missing_credentials_raises_key_error(monkeypatch):
+    monkeypatch.delenv("REDDIT_CLIENT_ID", raising=False)
+    monkeypatch.delenv("REDDIT_CLIENT_SECRET", raising=False)
+
+    with pytest.raises(KeyError):
+        reddit.get_client()
+
+
+def test_get_client_empty_string_credential_raises_key_error(monkeypatch):
+    """Meme bug deja corrige pour AliExpress/YouTube : une variable
+    presente mais vide (etat par defaut de .env.example, ou Reddit reste
+    bloque en pratique) ne doit pas etre traitee comme une vraie
+    credential — sinon praw.Reddit() se construit sans erreur et un vrai
+    appel API voue a l'echec (401) est tente au milieu du scan au lieu
+    d'un skip propre en amont."""
+    monkeypatch.setenv("REDDIT_CLIENT_ID", "")
+    monkeypatch.setenv("REDDIT_CLIENT_SECRET", "")
+
+    with pytest.raises(KeyError):
+        reddit.get_client()
+
+
 def test_search_keyword_wraps_iteration_error_in_reddit_error():
     """PRAW execute la vraie requete HTTP paresseusement, au moment de
     l'iteration sur le generateur — pas au moment de l'appel .search()
