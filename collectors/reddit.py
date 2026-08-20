@@ -12,6 +12,10 @@ from datetime import datetime, timezone
 import praw
 
 
+class RedditError(RuntimeError):
+    pass
+
+
 def get_client() -> praw.Reddit:
     """Leve KeyError si les credentials ne sont pas definis en env."""
     return praw.Reddit(
@@ -28,25 +32,36 @@ def search_keyword(
     time_filter: str = "month",
     limit: int = 25,
 ) -> list[dict]:
-    """Cherche `keyword` dans une liste de subreddits (ou tout Reddit si vide)."""
+    """Cherche `keyword` dans une liste de subreddits (ou tout Reddit si vide).
+
+    PRAW execute la vraie requete HTTP paresseusement, au moment de
+    l'iteration sur le generateur retourne par .search() — pas au moment
+    de l'appel lui-meme. Toute erreur (auth invalide, quota, reseau) doit
+    donc etre capturee autour de la boucle for, pas seulement autour de
+    l'appel, sous peine de laisser une exception brute de PRAW/prawcore
+    remonter jusqu'a l'appelant et planter tout le scan.
+    """
     subreddit_query = "+".join(subreddits) if subreddits else "all"
     posts = []
-    for submission in reddit.subreddit(subreddit_query).search(
-        keyword, sort="top", time_filter=time_filter, limit=limit
-    ):
-        posts.append(
-            {
-                "post_id": submission.id,
-                "subreddit": str(submission.subreddit),
-                "title": submission.title,
-                "score": submission.score,
-                "num_comments": submission.num_comments,
-                "created_utc": datetime.fromtimestamp(
-                    submission.created_utc, tz=timezone.utc
-                ).isoformat(),
-                "url": f"https://reddit.com{submission.permalink}",
-            }
-        )
+    try:
+        for submission in reddit.subreddit(subreddit_query).search(
+            keyword, sort="top", time_filter=time_filter, limit=limit
+        ):
+            posts.append(
+                {
+                    "post_id": submission.id,
+                    "subreddit": str(submission.subreddit),
+                    "title": submission.title,
+                    "score": submission.score,
+                    "num_comments": submission.num_comments,
+                    "created_utc": datetime.fromtimestamp(
+                        submission.created_utc, tz=timezone.utc
+                    ).isoformat(),
+                    "url": f"https://reddit.com{submission.permalink}",
+                }
+            )
+    except Exception as exc:
+        raise RedditError(f"Echec recherche Reddit pour '{keyword}' : {exc}") from exc
     return posts
 
 

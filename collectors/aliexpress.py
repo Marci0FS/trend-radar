@@ -79,8 +79,11 @@ def _system_params(app_key: str, method: str) -> dict:
 def get_access_token() -> str:
     """Echange ALIEXPRESS_REFRESH_TOKEN contre un access_token frais.
     Leve KeyError si ALIEXPRESS_APP_KEY/ALIEXPRESS_APP_SECRET/
-    ALIEXPRESS_REFRESH_TOKEN ne sont pas definies en env (meme convention
-    que collectors.reddit.get_client / collectors.ebay.get_app_token)."""
+    ALIEXPRESS_REFRESH_TOKEN ne sont pas definies en env, OU sont definies
+    mais vides (meme etat par defaut que .env.example, qui ne doit jamais
+    etre traite comme des credentials presentes — cf. le meme bug corrige
+    pour YOUTUBE_API_KEY) (meme convention que collectors.reddit.get_client
+    / collectors.ebay.get_app_token)."""
     global _cached_access_token
     if _cached_access_token is not None:
         return _cached_access_token
@@ -88,6 +91,8 @@ def get_access_token() -> str:
     app_key = os.environ["ALIEXPRESS_APP_KEY"]
     app_secret = os.environ["ALIEXPRESS_APP_SECRET"]
     refresh_token = os.environ["ALIEXPRESS_REFRESH_TOKEN"]
+    if not (app_key and app_secret and refresh_token):
+        raise KeyError("ALIEXPRESS_APP_KEY/ALIEXPRESS_APP_SECRET/ALIEXPRESS_REFRESH_TOKEN")
 
     params = _system_params(app_key, _METHOD_REFRESH_TOKEN)
     params["refresh_token"] = refresh_token

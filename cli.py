@@ -123,14 +123,17 @@ def cmd_scan(watchlist: dict, publish_after: bool = False) -> None:
             time.sleep(2)  # limite le risque de 429 pytrends sur un scan a beaucoup de mots-cles
 
             if reddit_client:
-                posts = reddit_collector.search_keyword(
-                    reddit_client,
-                    keyword,
-                    subreddits,
-                    time_filter=watchlist.get("reddit_time_filter", "month"),
-                    limit=watchlist.get("reddit_post_limit", 25),
-                )
-                db.insert_reddit_posts(conn, keyword_id, posts)
+                try:
+                    posts = reddit_collector.search_keyword(
+                        reddit_client,
+                        keyword,
+                        subreddits,
+                        time_filter=watchlist.get("reddit_time_filter", "month"),
+                        limit=watchlist.get("reddit_post_limit", 25),
+                    )
+                    db.insert_reddit_posts(conn, keyword_id, posts)
+                except reddit_collector.RedditError as exc:
+                    print(f"  Echec Reddit pour '{keyword}', continue sans ce signal : {exc}")
 
             if ebay_available:
                 marketplace = watchlist.get("ebay_marketplace", "EBAY_FR")

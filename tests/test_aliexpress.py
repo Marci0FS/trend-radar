@@ -23,6 +23,20 @@ def test_get_access_token_missing_credentials_raises_key_error(monkeypatch):
         aliexpress.get_access_token()
 
 
+def test_get_access_token_empty_string_credential_raises_key_error(monkeypatch):
+    """Une variable presente mais vide (etat par defaut de .env.example)
+    doit etre traitee comme absente, pas comme une vraie credential —
+    sinon un appel API reel et voue a l'echec est tente (observe en
+    production : erreur 'InvalidAppKey')."""
+    monkeypatch.setenv("ALIEXPRESS_APP_KEY", "")
+    monkeypatch.setenv("ALIEXPRESS_APP_SECRET", "")
+    monkeypatch.setenv("ALIEXPRESS_REFRESH_TOKEN", "")
+    monkeypatch.setattr(aliexpress, "_cached_access_token", None)
+
+    with pytest.raises(KeyError):
+        aliexpress.get_access_token()
+
+
 def test_get_access_token_caches_within_process(monkeypatch):
     monkeypatch.setenv("ALIEXPRESS_APP_KEY", "test-key")
     monkeypatch.setenv("ALIEXPRESS_APP_SECRET", "test-secret")
