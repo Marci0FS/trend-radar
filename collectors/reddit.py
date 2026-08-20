@@ -17,10 +17,17 @@ class RedditError(RuntimeError):
 
 
 def get_client() -> praw.Reddit:
-    """Leve KeyError si les credentials ne sont pas definis en env."""
+    """Leve KeyError si les credentials ne sont pas definies en env, OU
+    sont definies mais vides (meme etat par defaut que .env.example, qui
+    ne doit jamais etre traite comme des credentials presentes — meme
+    bug deja corrige pour ALIEXPRESS_APP_KEY/YOUTUBE_API_KEY)."""
+    client_id = os.environ["REDDIT_CLIENT_ID"]
+    client_secret = os.environ["REDDIT_CLIENT_SECRET"]
+    if not (client_id and client_secret):
+        raise KeyError("REDDIT_CLIENT_ID/REDDIT_CLIENT_SECRET")
     return praw.Reddit(
-        client_id=os.environ["REDDIT_CLIENT_ID"],
-        client_secret=os.environ["REDDIT_CLIENT_SECRET"],
+        client_id=client_id,
+        client_secret=client_secret,
         user_agent=os.environ.get("REDDIT_USER_AGENT", "trend-radar/0.1"),
     )
 
