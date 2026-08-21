@@ -83,6 +83,16 @@ CREATE TABLE IF NOT EXISTS youtube_snapshots (
     UNIQUE(keyword_id, date)
 );
 
+CREATE TABLE IF NOT EXISTS trends_discovery_candidates (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    term TEXT NOT NULL,
+    date TEXT NOT NULL,
+    ebay_signal INTEGER NOT NULL,
+    youtube_signal INTEGER NOT NULL,
+    collected_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(term, date)
+);
+
 CREATE INDEX IF NOT EXISTS idx_trends_keyword ON google_trends_snapshots(keyword_id);
 CREATE INDEX IF NOT EXISTS idx_reddit_keyword ON reddit_signals(keyword_id);
 CREATE INDEX IF NOT EXISTS idx_signals_keyword ON signals(keyword_id);
