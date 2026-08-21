@@ -193,6 +193,71 @@
       "youtube_growth_pct": 0.0
     }
   ],
-  "discovery": [],
-  "last_updated": "2026-08-21T18:01:39.232788+00:00"
+  "discovery": [
+    {
+      "phrase": "chaleur",
+      "source": "google_trends",
+      "mention_count": 0,
+      "growth_pct": 0,
+      "ebay_signal": true,
+      "youtube_signal": false
+    },
+    {
+      "phrase": "world rugby",
+      "source": "google_trends",
+      "mention_count": 0,
+      "growth_pct": 0,
+      "ebay_signal": true,
+      "youtube_signal": false
+    },
+    {
+      "phrase": "meteo tours",
+      "source": "google_trends",
+      "mention_count": 0,
+      "growth_pct": 0,
+      "ebay_signal": true,
+      "youtube_signal": false
+    },
+    {
+      "phrase": "équipe d'argentine de football",
+      "source": "google_trends",
+      "mention_count": 0,
+      "growth_pct": 0,
+      "ebay_signal": true,
+      "youtube_signal": false
+    },
+    {
+      "phrase": "marseille – strasbourg",
+      "source": "google_trends",
+      "mention_count": 0,
+      "growth_pct": 0,
+      "ebay_signal": true,
+      "youtube_signal": false
+    },
+    {
+      "phrase": "malick fofana",
+      "source": "google_trends",
+      "mention_count": 0,
+      "growth_pct": 0,
+      "ebay_signal": true,
+      "youtube_signal": false
+    },
+    {
+      "phrase": "stade montois rugby",
+      "source": "google_trends",
+      "mention_count": 0,
+      "growth_pct": 0,
+      "ebay_signal": true,
+      "youtube_signal": false
+    },
+    {
+      "phrase": "émirats arabes unis",
+      "source": "google_trends",
+      "mention_count": 0,
+      "growth_pct": 0,
+      "ebay_signal": true,
+      "youtube_signal": false
+    }
+  ],
+  "last_updated": "2026-08-21T18:09:36.528511+00:00"
 }
