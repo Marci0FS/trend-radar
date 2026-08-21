@@ -132,6 +132,16 @@ python cli.py promote "nom du produit" gadgets
 suivi de `scan` valide un candidat via Trends + convergence. Ca evite de
 gaspiller le budget de requetes Trends sur du bruit d'extraction.
 
+Depuis peu, `discover` combine deux sources independantes :
+- **Reddit** (hot/rising sur les subreddits configures) — necessite
+  REDDIT_CLIENT_ID/SECRET.
+- **Google Trends** (recherches en tendance en temps reel, filtrees via
+  eBay/YouTube pour ne garder que les candidats plausiblement produits)
+  — aucune credential requise, fonctionne meme si Reddit est bloque.
+
+Les deux sources tournent independamment : si l'une echoue, l'autre
+continue de produire des candidats normalement.
+
 ### Dashboard web (Vercel)
 
 ```bash
