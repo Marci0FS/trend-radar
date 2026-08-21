@@ -79,9 +79,16 @@ def test_add_keyword_to_second_category_in_multi_category():
 
 
 def test_is_duplicate_detects_existing_keyword():
-    assert is_duplicate(EXISTING_YAML, "mini projecteur", "gadgets") is True
-    assert is_duplicate(EXISTING_YAML, "nouveau produit", "gadgets") is False
-    assert is_duplicate(EXISTING_YAML, "mini projecteur", "beaute") is False
+    assert is_duplicate(EXISTING_YAML, "mini projecteur") is True
+    assert is_duplicate(EXISTING_YAML, "nouveau produit") is False
+
+
+def test_is_duplicate_detects_keyword_in_a_different_category():
+    """Un meme produit ne doit pas pouvoir etre promu deux fois sous deux
+    categories differentes : is_duplicate doit chercher dans TOUTES les
+    categories, pas seulement celle visee par le promote en cours."""
+    assert is_duplicate(MULTI_CATEGORY_YAML, "masque facial") is True
+    assert is_duplicate(MULTI_CATEGORY_YAML, "produit inconnu") is False
 
 
 def test_add_keyword_with_double_quote_produces_valid_yaml():
@@ -167,4 +174,4 @@ def test_is_duplicate_handles_null_keywords():
     subreddits: []
 """
     # Should not crash and should return False
-    assert is_duplicate(yaml_with_null_keywords, "test", "gadgets") is False
+    assert is_duplicate(yaml_with_null_keywords, "test") is False
