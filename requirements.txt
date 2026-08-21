@@ -1,4 +1,5 @@
 pytrends
+trendspyg
 praw
 PyYAML
 spacy
