@@ -1,5 +1,5 @@
 from collectors import google_trends, reddit as reddit_collector
-from discovery import promote, reddit_scan
+from discovery import promote, reddit_scan, trends_scan
 from storage import db as storage_db
 
 import cli
@@ -7,6 +7,7 @@ import cli
 
 def test_cmd_discover_writes_report(tmp_path, monkeypatch):
     monkeypatch.setattr(storage_db, "DB_PATH", tmp_path / "test.db")
+    monkeypatch.setattr(trends_scan, "fetch_trending_candidates", lambda **kwargs: [])
     report_path = tmp_path / "discovery_report.md"
     monkeypatch.setattr(cli, "DISCOVERY_REPORT_PATH", report_path)
 
@@ -37,6 +38,7 @@ def test_cmd_discover_writes_report(tmp_path, monkeypatch):
 
 def test_cmd_discover_skips_without_reddit_credentials(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(storage_db, "DB_PATH", tmp_path / "test.db")
+    monkeypatch.setattr(trends_scan, "fetch_trending_candidates", lambda **kwargs: [])
 
     def _raise_key_error():
         raise KeyError("REDDIT_CLIENT_ID")
@@ -148,17 +150,25 @@ def test_cmd_promote_aborts_write_when_phrase_lands_wrong_category(tmp_path, mon
     assert watchlist_file.read_text() == original_text
 
 
-def test_cmd_discover_never_calls_google_trends(tmp_path, monkeypatch):
-    """Contrainte la plus importante du projet (discovery finding #7) :
-    `discover` ne doit jamais interroger Google Trends. `growth_pct` est
-    legitimement appele par velocity.find_candidates, seul
-    fetch_interest_over_time (l'appel reseau) est verrouille ici."""
+def test_cmd_discover_never_calls_legacy_per_keyword_google_trends(tmp_path, monkeypatch):
+    """Discovery finding #7, mis a jour pour ce plan : `discover` ne doit
+    jamais interroger le collecteur Google Trends historique
+    (collectors.google_trends.fetch_interest_over_time), qui suit un
+    mot-cle deja connu dans le temps -- inadapte a la decouverte sans
+    mot-cle. Depuis ce plan, `discover` appelle bien Google Trends, mais
+    via discovery.trends_scan (realtime_trending_searches, sans mot-cle
+    fourni a l'avance), jamais via fetch_interest_over_time. `growth_pct`
+    est legitimement appele par velocity.find_candidates."""
     monkeypatch.setattr(storage_db, "DB_PATH", tmp_path / "test.db")
+    monkeypatch.setattr(trends_scan, "fetch_trending_candidates", lambda **kwargs: [])
     report_path = tmp_path / "discovery_report.md"
     monkeypatch.setattr(cli, "DISCOVERY_REPORT_PATH", report_path)
 
     def _fail_if_called(*args, **kwargs):
-        raise AssertionError("cmd_discover ne doit jamais appeler Google Trends")
+        raise AssertionError(
+            "cmd_discover ne doit jamais appeler le collecteur Google Trends "
+            "historique (fetch_interest_over_time)"
+        )
 
     monkeypatch.setattr(google_trends, "fetch_interest_over_time", _fail_if_called)
 
@@ -185,3 +195,112 @@ def test_cmd_discover_never_calls_google_trends(tmp_path, monkeypatch):
 
     assert report_path.exists()
     assert "led face mask" in report_path.read_text()
+
+
+def test_cmd_discover_includes_google_trends_candidates_when_reddit_unavailable(
+    tmp_path, monkeypatch
+):
+    monkeypatch.setattr(storage_db, "DB_PATH", tmp_path / "test.db")
+    monkeypatch.setattr(cli, "SIGNALS_JSON_PATH", tmp_path / "signals.json")
+    monkeypatch.setattr(cli, "DISCOVERY_REPORT_PATH", tmp_path / "discovery_report.md")
+
+    def _raise_key_error():
+        raise KeyError("REDDIT_CLIENT_ID")
+
+    monkeypatch.setattr(reddit_collector, "get_client", _raise_key_error)
+
+    fake_candidate = {
+        "phrase": "led face mask",
+        "source": "google_trends",
+        "mention_count": 0,
+        "growth_pct": 0,
+        "ebay_signal": True,
+        "youtube_signal": False,
+    }
+    monkeypatch.setattr(trends_scan, "fetch_trending_candidates", lambda **kwargs: [fake_candidate])
+
+    cli.cmd_discover({"discovery": {"subreddits": []}})
+
+    import json
+
+    data = json.loads((tmp_path / "signals.json").read_text())
+    phrases = [c["phrase"] for c in data["discovery"]]
+    assert "led face mask" in phrases
+    sources = {c["phrase"]: c["source"] for c in data["discovery"]}
+    assert sources["led face mask"] == "google_trends"
+
+
+def test_cmd_discover_continues_when_google_trends_fails(tmp_path, monkeypatch):
+    """Un echec Google Trends ne doit pas empecher les candidats Reddit
+    d'apparaitre dans le meme run (independance des deux sources de
+    decouverte, meme principe que cmd_scan)."""
+    monkeypatch.setattr(storage_db, "DB_PATH", tmp_path / "test.db")
+    monkeypatch.setattr(cli, "SIGNALS_JSON_PATH", tmp_path / "signals.json")
+    monkeypatch.setattr(cli, "DISCOVERY_REPORT_PATH", tmp_path / "discovery_report.md")
+
+    monkeypatch.setattr(reddit_collector, "get_client", lambda: object())
+    monkeypatch.setattr(
+        reddit_scan,
+        "scan_subreddits",
+        lambda reddit, subreddits, post_limit: [
+            {"subreddit": "gadgets", "title": "This LED face mask is amazing"},
+            {"subreddit": "gadgets", "title": "I love my LED face mask so much"},
+        ],
+    )
+
+    def _raise_runtime_error(**kwargs):
+        raise RuntimeError("simulated Google Trends failure")
+
+    monkeypatch.setattr(trends_scan, "fetch_trending_candidates", _raise_runtime_error)
+
+    watchlist = {
+        "discovery": {
+            "subreddits": ["gadgets"],
+            "post_limit": 10,
+            "min_mentions": 1,
+            "min_growth_pct": 0,
+        }
+    }
+
+    cli.cmd_discover(watchlist)  # ne doit pas lever d'exception
+
+    assert "led face mask" in (tmp_path / "discovery_report.md").read_text()
+
+
+def test_cmd_discover_one_trending_term_failure_does_not_lose_reddit_candidates(
+    tmp_path, monkeypatch
+):
+    """Verifie que la fusion des deux listes garde les candidats Reddit
+    meme quand Google Trends renvoie une liste vide (aucun candidat
+    confirme, sans que ce soit une erreur)."""
+    monkeypatch.setattr(storage_db, "DB_PATH", tmp_path / "test.db")
+    monkeypatch.setattr(cli, "SIGNALS_JSON_PATH", tmp_path / "signals.json")
+    monkeypatch.setattr(cli, "DISCOVERY_REPORT_PATH", tmp_path / "discovery_report.md")
+
+    monkeypatch.setattr(reddit_collector, "get_client", lambda: object())
+    monkeypatch.setattr(
+        reddit_scan,
+        "scan_subreddits",
+        lambda reddit, subreddits, post_limit: [
+            {"subreddit": "gadgets", "title": "This LED face mask is amazing"},
+            {"subreddit": "gadgets", "title": "I love my LED face mask so much"},
+        ],
+    )
+    monkeypatch.setattr(trends_scan, "fetch_trending_candidates", lambda **kwargs: [])
+
+    watchlist = {
+        "discovery": {
+            "subreddits": ["gadgets"],
+            "post_limit": 10,
+            "min_mentions": 1,
+            "min_growth_pct": 0,
+        }
+    }
+
+    cli.cmd_discover(watchlist)
+
+    import json
+
+    data = json.loads((tmp_path / "signals.json").read_text())
+    phrases = [c["phrase"] for c in data["discovery"]]
+    assert "led face mask" in phrases
