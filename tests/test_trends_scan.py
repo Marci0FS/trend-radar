@@ -29,6 +29,8 @@ def test_fetch_trending_candidates_confirms_term_with_ebay_signal(monkeypatch):
         "growth_pct": 0,
         "ebay_signal": True,
         "youtube_signal": False,
+        "ebay_count": 42,
+        "youtube_views": 0,
     }
 
 
@@ -45,6 +47,8 @@ def test_fetch_trending_candidates_confirms_term_with_youtube_signal_only(monkey
     assert len(candidates) == 1
     assert candidates[0]["ebay_signal"] is False
     assert candidates[0]["youtube_signal"] is True
+    assert candidates[0]["ebay_count"] == 0
+    assert candidates[0]["youtube_views"] == 1500
 
 
 def test_fetch_trending_candidates_discards_term_with_no_signal(monkeypatch):
@@ -122,6 +126,8 @@ def test_fetch_trending_candidates_treats_missing_ebay_credentials_as_no_signal(
     assert len(candidates) == 1
     assert candidates[0]["ebay_signal"] is False
     assert candidates[0]["youtube_signal"] is True
+    assert candidates[0]["ebay_count"] == 0
+    assert candidates[0]["youtube_views"] == 100
 
 
 def test_fetch_trending_candidates_raises_runtime_error_on_google_trends_failure(monkeypatch):

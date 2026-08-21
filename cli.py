@@ -222,60 +222,70 @@ def cmd_discover(watchlist: dict, publish_after: bool = False) -> None:
     min_growth = discovery_cfg.get("min_growth_pct", 30)
 
     reddit_candidates: list[dict] = []
-    try:
-        reddit_client = reddit_collector.get_client()
-    except KeyError:
-        reddit_client = None
-        print("Reddit : credentials manquants, discovery Reddit desactivee pour ce run")
-
-    if reddit_client:
-        try:
-            # Echoue vite si le modele spaCy manque, avant de consommer le budget
-            # d'appels Reddit sur un scan complet (voir discovery.extract.ensure_model).
-            extract.ensure_model()
-
-            print(f"Discovery : scan de {len(subreddits)} subreddits...")
-            posts = reddit_scan.scan_subreddits(reddit_client, subreddits, post_limit=post_limit)
-
-            titles_by_subreddit: dict[str, list[str]] = {}
-            for p in posts:
-                titles_by_subreddit.setdefault(p["subreddit"], []).append(p["title"])
-
-            now = datetime.now(timezone.utc).isoformat()
-            mentions = []
-            for subreddit, titles in titles_by_subreddit.items():
-                phrase_counts = extract.extract_phrases(titles)
-                for phrase, count in phrase_counts.items():
-                    mentions.append({
-                        "phrase": phrase,
-                        "subreddit": subreddit,
-                        "mention_count": count,
-                        "window_start": now,
-                        "window_end": now,
-                    })
-            db.insert_phrase_mentions(conn, mentions)
-
-            found = velocity.find_candidates(
-                conn, min_mentions=min_mentions, min_growth_pct=min_growth, current_window=now
-            )
-            reddit_candidates = [{**c, "source": "reddit"} for c in found]
-        except Exception as exc:
-            print(f"Discovery Reddit : echec, continue sans ces candidats : {exc}")
-
     trends_candidates: list[dict] = []
     try:
-        trends_geo = watchlist.get("trends_geo", "FR")
-        found = trends_scan.fetch_trending_candidates(geo=trends_geo, limit=20)
-        today = datetime.now(timezone.utc).date().isoformat()
-        for c in found:
-            db.insert_trends_discovery_candidate(
-                conn, c["phrase"], today, c["ebay_signal"], c["youtube_signal"]
-            )
-        trends_candidates = found
-    except RuntimeError as exc:
-        print(f"Discovery Google Trends : echec, continue sans ces candidats : {exc}")
+        try:
+            reddit_client = reddit_collector.get_client()
+        except KeyError:
+            reddit_client = None
+            print("Reddit : credentials manquants, discovery Reddit desactivee pour ce run")
 
-    conn.close()
+        if reddit_client:
+            try:
+                # Echoue vite si le modele spaCy manque, avant de consommer le budget
+                # d'appels Reddit sur un scan complet (voir discovery.extract.ensure_model).
+                extract.ensure_model()
+
+                print(f"Discovery : scan de {len(subreddits)} subreddits...")
+                posts = reddit_scan.scan_subreddits(reddit_client, subreddits, post_limit=post_limit)
+
+                titles_by_subreddit: dict[str, list[str]] = {}
+                for p in posts:
+                    titles_by_subreddit.setdefault(p["subreddit"], []).append(p["title"])
+
+                now = datetime.now(timezone.utc).isoformat()
+                mentions = []
+                for subreddit, titles in titles_by_subreddit.items():
+                    phrase_counts = extract.extract_phrases(titles)
+                    for phrase, count in phrase_counts.items():
+                        mentions.append({
+                            "phrase": phrase,
+                            "subreddit": subreddit,
+                            "mention_count": count,
+                            "window_start": now,
+                            "window_end": now,
+                        })
+                db.insert_phrase_mentions(conn, mentions)
+
+                found = velocity.find_candidates(
+                    conn, min_mentions=min_mentions, min_growth_pct=min_growth, current_window=now
+                )
+                reddit_candidates = [{**c, "source": "reddit"} for c in found]
+            except Exception as exc:
+                print(f"Discovery Reddit : echec, continue sans ces candidats : {exc}")
+
+        try:
+            trends_geo = watchlist.get("trends_geo", "FR")
+            # 20 : plafond volontaire pour rester tres en dessous du quota YouTube
+            # search.list (100 appels/jour, dont 16 deja utilises par le scan
+            # watchlist quotidien).
+            found = trends_scan.fetch_trending_candidates(geo=trends_geo, limit=20)
+            today = datetime.now(timezone.utc).date().isoformat()
+            for c in found:
+                db.insert_trends_discovery_candidate(
+                    conn,
+                    c["phrase"],
+                    today,
+                    c["ebay_signal"],
+                    c["youtube_signal"],
+                    c["ebay_count"],
+                    c["youtube_views"],
+                )
+            trends_candidates = found
+        except Exception as exc:
+            print(f"Discovery Google Trends : echec, continue sans ces candidats : {exc}")
+    finally:
+        conn.close()
 
     candidates = reddit_candidates + trends_candidates
     write_discovery_report(candidates)
@@ -346,7 +356,10 @@ def write_report(results: list[dict]) -> None:
 
 
 def write_discovery_report(candidates: list[dict]) -> None:
-    """Genere un rapport Markdown des candidats discovery, trie par croissance."""
+    """Genere un rapport Markdown des candidats discovery, dans l'ordre recu
+    (candidats Reddit puis candidats Google Trends) : Reddit fournit deja sa
+    propre liste triee par croissance via velocity.find_candidates, mais
+    cette fonction elle-meme ne trie rien."""
     lines = ["# Rapport discovery — trend-radar", ""]
     if not candidates:
         lines.append("Aucun candidat au-dessus des seuils pour ce scan.")
@@ -400,7 +413,7 @@ def main() -> None:
     )
 
     discover_parser = sub.add_parser(
-        "discover", help="detecte des candidats emergents sur Reddit, sans mots-cles"
+        "discover", help="detecte des candidats emergents sans mots-cles, via Reddit et/ou Google Trends"
     )
     discover_parser.add_argument(
         "--publish", action="store_true", help="pousse signals.json vers GitHub apres le scan"

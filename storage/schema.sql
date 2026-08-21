@@ -89,6 +89,8 @@ CREATE TABLE IF NOT EXISTS trends_discovery_candidates (
     date TEXT NOT NULL,
     ebay_signal INTEGER NOT NULL,
     youtube_signal INTEGER NOT NULL,
+    ebay_count INTEGER NOT NULL DEFAULT 0,
+    youtube_views INTEGER NOT NULL DEFAULT 0,
     collected_at TEXT NOT NULL DEFAULT (datetime('now')),
     UNIQUE(term, date)
 );

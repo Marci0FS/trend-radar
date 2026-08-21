@@ -41,8 +41,10 @@ def fetch_trending_candidates(geo: str = "FR", limit: int = _RESULTS_LIMIT) -> l
     terms = _fetch_trending_terms(geo)
     candidates = []
     for term in terms[:limit]:
-        ebay_signal = _check_ebay_signal(term)
-        youtube_signal = _check_youtube_signal(term)
+        ebay_count = _ebay_listing_count(term)
+        youtube_views = _youtube_view_count(term)
+        ebay_signal = ebay_count > 0
+        youtube_signal = youtube_views > 0
         if ebay_signal or youtube_signal:
             candidates.append(
                 {
@@ -52,6 +54,8 @@ def fetch_trending_candidates(geo: str = "FR", limit: int = _RESULTS_LIMIT) -> l
                     "growth_pct": 0,
                     "ebay_signal": ebay_signal,
                     "youtube_signal": youtube_signal,
+                    "ebay_count": ebay_count,
+                    "youtube_views": youtube_views,
                 }
             )
     return candidates
@@ -71,19 +75,20 @@ def _fetch_trending_terms(geo: str, retries: int = 2) -> list[str]:
             if attempt < retries:
                 time.sleep(5 * (attempt + 1))
     raise RuntimeError(
-        f"Echec fetch Google Trends realtime_trending_searches (geo={geo})"
+        f"Echec fetch Google Trends realtime_trending_searches (geo={geo}) : "
+        f"{repr(last_error)[:500]}"
     ) from last_error
 
 
-def _check_ebay_signal(term: str) -> bool:
+def _ebay_listing_count(term: str) -> int:
     try:
-        return ebay.fetch_listing_count(term) > 0
+        return ebay.fetch_listing_count(term)
     except (KeyError, ebay.EbayError):
-        return False
+        return 0
 
 
-def _check_youtube_signal(term: str) -> bool:
+def _youtube_view_count(term: str) -> int:
     try:
-        return youtube.fetch_recent_view_count(term) > 0
+        return youtube.fetch_recent_view_count(term)
     except (KeyError, youtube.YouTubeError):
-        return False
+        return 0

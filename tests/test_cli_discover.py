@@ -216,6 +216,8 @@ def test_cmd_discover_includes_google_trends_candidates_when_reddit_unavailable(
         "growth_pct": 0,
         "ebay_signal": True,
         "youtube_signal": False,
+        "ebay_count": 42,
+        "youtube_views": 0,
     }
     monkeypatch.setattr(trends_scan, "fetch_trending_candidates", lambda **kwargs: [fake_candidate])
 
@@ -228,6 +230,70 @@ def test_cmd_discover_includes_google_trends_candidates_when_reddit_unavailable(
     assert "led face mask" in phrases
     sources = {c["phrase"]: c["source"] for c in data["discovery"]}
     assert sources["led face mask"] == "google_trends"
+
+
+def test_cmd_discover_merges_reddit_and_trends_candidates_in_one_run(tmp_path, monkeypatch):
+    """Les deux sources de discovery tournent independamment mais doivent
+    pouvoir toutes les deux produire des candidats dans le meme run (finding
+    #3 de la revue finale) : ni l'une ni l'autre ne doit ecraser les
+    candidats de l'autre lors de la fusion."""
+    monkeypatch.setattr(storage_db, "DB_PATH", tmp_path / "test.db")
+    monkeypatch.setattr(cli, "SIGNALS_JSON_PATH", tmp_path / "signals.json")
+    report_path = tmp_path / "discovery_report.md"
+    monkeypatch.setattr(cli, "DISCOVERY_REPORT_PATH", report_path)
+
+    monkeypatch.setattr(reddit_collector, "get_client", lambda: object())
+    monkeypatch.setattr(
+        reddit_scan,
+        "scan_subreddits",
+        lambda reddit, subreddits, post_limit: [
+            {"subreddit": "gadgets", "title": "This LED face mask is amazing"},
+            {"subreddit": "gadgets", "title": "I love my LED face mask so much"},
+        ],
+    )
+
+    trends_candidate = {
+        "phrase": "mini projecteur",
+        "source": "google_trends",
+        "mention_count": 0,
+        "growth_pct": 0,
+        "ebay_signal": True,
+        "youtube_signal": False,
+        "ebay_count": 42,
+        "youtube_views": 0,
+    }
+    monkeypatch.setattr(
+        trends_scan, "fetch_trending_candidates", lambda **kwargs: [trends_candidate]
+    )
+
+    watchlist = {
+        "discovery": {
+            "subreddits": ["gadgets"],
+            "post_limit": 10,
+            "min_mentions": 1,
+            "min_growth_pct": 0,
+        }
+    }
+
+    cli.cmd_discover(watchlist)
+
+    import json
+
+    data = json.loads((tmp_path / "signals.json").read_text())
+    phrases = [c["phrase"] for c in data["discovery"]]
+    assert "led face mask" in phrases
+    assert "mini projecteur" in phrases
+    sources = {c["phrase"]: c["source"] for c in data["discovery"]}
+    assert sources["led face mask"] == "reddit"
+    assert sources["mini projecteur"] == "google_trends"
+
+    report_text = report_path.read_text()
+    assert "led face mask" in report_text
+    assert "mini projecteur" in report_text
+    assert "Mentions cette fenetre" in report_text
+    assert "Croissance" in report_text
+    assert "Signal eBay" in report_text
+    assert "Signal YouTube" in report_text
 
 
 def test_cmd_discover_continues_when_google_trends_fails(tmp_path, monkeypatch):
