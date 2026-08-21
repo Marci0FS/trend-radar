@@ -4,23 +4,27 @@ mot-cle donne dans le temps).
 
 Google a deja fait le travail de detection de tendance : ce module ne
 calcule aucune croissance, il recupere un instantane des N recherches
-les plus en tendance actuellement (realtime_trending_searches), puis
-filtre celles qui ont aussi un signal produit (eBay et/ou YouTube) pour
-ecarter l'actualite generaliste (celebrites, sport, meteo...) que
-pytrends renvoie sans distinction — meme logique de "convergence" que le
-reste du projet, plutot qu'une couche NLP de filtrage supplementaire.
+les plus en tendance actuellement, puis filtre celles qui ont aussi un
+signal produit (eBay et/ou YouTube) pour ecarter l'actualite generaliste
+(celebrites, sport, meteo...) que le flux renvoie sans distinction —
+meme logique de "convergence" que le reste du projet, plutot qu'une
+couche NLP de filtrage supplementaire.
 
-Note d'implementation : le nom exact de la colonne portant le terme de
-recherche dans la reponse de realtime_trending_searches ('title') est
-notre meilleure lecture de la lib pytrends au moment de l'ecriture — a
-confirmer au premier run reel (voir aussi la note du module sur pytrends
-etant archive depuis avril 2025, non bloquant pour l'instant).
+Utilise trendspyg (fork maintenu de pytrends, flux RSS Google Trends)
+plutot que pytrends.realtime_trending_searches : ce dernier s'est avere
+mort en production le 2026-08-21, le jour meme du premier run reel
+(HTTP 404 confirme sur les 3 methodes de la famille "trending searches"
+de pytrends — realtime_trending_searches, trending_searches,
+today_searches — alors que pytrends.interest_over_time, utilise par
+collectors/google_trends.py pour le mode watchlist, fonctionnait
+toujours). trendspyg contourne le probleme en lisant le flux RSS public
+de Google (https://trends.google.com/trending/rss), toujours actif.
 """
 from __future__ import annotations
 
 import time
 
-from pytrends.request import TrendReq
+from trendspyg import download_google_trends_rss
 
 from collectors import ebay
 from collectors import youtube
@@ -65,17 +69,20 @@ def _fetch_trending_terms(geo: str, retries: int = 2) -> list[str]:
     last_error: Exception | None = None
     for attempt in range(retries + 1):
         try:
-            pytrends = TrendReq(hl="fr-FR", tz=60)
-            df = pytrends.realtime_trending_searches(pn=geo)
-            if df is None or df.empty:
-                return []
-            return [str(t) for t in df["title"].tolist()]
-        except Exception as exc:  # pytrends leve des exceptions requests generiques
+            results = download_google_trends_rss(
+                geo=geo,
+                output_format="dict",
+                include_images=False,
+                include_articles=False,
+                cache=False,
+            )
+            return [str(r["trend"]) for r in results]
+        except Exception as exc:  # trendspyg leve des TrendspygException typees
             last_error = exc
             if attempt < retries:
                 time.sleep(5 * (attempt + 1))
     raise RuntimeError(
-        f"Echec fetch Google Trends realtime_trending_searches (geo={geo}) : "
+        f"Echec fetch Google Trends RSS trending (geo={geo}) : "
         f"{repr(last_error)[:500]}"
     ) from last_error
 

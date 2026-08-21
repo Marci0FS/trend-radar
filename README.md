@@ -131,10 +131,13 @@ python cli.py promote "nom du produit" gadgets
 `discover` ne consulte jamais le Google Trends *par mot-cle* (`fetch_interest_over_time`,
 qui suit un mot-cle deja connu dans le temps et coute du budget d'API par
 entree de watchlist) — seul `promote` suivi de `scan` valide un candidat via
-ce lookup + convergence. En revanche, `discover` appelle bien Google Trends
-directement via `realtime_trending_searches` (recherches en tendance en
-temps reel, sans mot-cle a fournir, sans cout par entree) pour sa propre
-detection de candidats.
+ce lookup + convergence. En revanche, `discover` recupere bien les
+recherches en tendance en temps reel sur Google (sans mot-cle a fournir,
+sans cout par entree) pour sa propre detection de candidats — via
+`trendspyg` (flux RSS Google Trends), pas `pytrends` : la famille de
+methodes "trending searches" de `pytrends` (dont `realtime_trending_searches`,
+utilisee initialement) a cesse de fonctionner (HTTP 404) le 2026-08-21,
+`pytrends` etant archive depuis avril 2025 et non maintenu.
 
 Depuis peu, `discover` combine deux sources independantes :
 - **Reddit** (hot/rising sur les subreddits configures) — necessite
