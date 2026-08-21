@@ -121,16 +121,30 @@ locale (pas de process Vercel — voir note architecture ci-dessous).
 ### Mode discovery (sans mots-clés)
 
 ```bash
-# Detecte des candidats emergents sur Reddit (config/watchlist.yaml -> discovery)
+# Detecte des candidats emergents sur Reddit et/ou Google Trends (config/watchlist.yaml -> discovery)
 python cli.py discover
 
 # Lit data/discovery_report.md, puis fait entrer un candidat dans le pipeline standard
 python cli.py promote "nom du produit" gadgets
 ```
 
-`discover` ne consulte jamais Google Trends automatiquement — seul `promote`
-suivi de `scan` valide un candidat via Trends + convergence. Ca evite de
-gaspiller le budget de requetes Trends sur du bruit d'extraction.
+`discover` ne consulte jamais le Google Trends *par mot-cle* (`fetch_interest_over_time`,
+qui suit un mot-cle deja connu dans le temps et coute du budget d'API par
+entree de watchlist) — seul `promote` suivi de `scan` valide un candidat via
+ce lookup + convergence. En revanche, `discover` appelle bien Google Trends
+directement via `realtime_trending_searches` (recherches en tendance en
+temps reel, sans mot-cle a fournir, sans cout par entree) pour sa propre
+detection de candidats.
+
+Depuis peu, `discover` combine deux sources independantes :
+- **Reddit** (hot/rising sur les subreddits configures) — necessite
+  REDDIT_CLIENT_ID/SECRET.
+- **Google Trends** (recherches en tendance en temps reel, filtrees via
+  eBay/YouTube pour ne garder que les candidats plausiblement produits)
+  — aucune credential requise, fonctionne meme si Reddit est bloque.
+
+Les deux sources tournent independamment : si l'une echoue, l'autre
+continue de produire des candidats normalement.
 
 ### Dashboard web (Vercel)
 

@@ -184,3 +184,21 @@ def get_youtube_snapshot_series(conn: sqlite3.Connection, keyword_id: int) -> li
         (keyword_id,),
     ).fetchall()
     return [(r["date"], r["view_count"]) for r in rows]
+
+
+def insert_trends_discovery_candidate(
+    conn: sqlite3.Connection,
+    term: str,
+    date: str,
+    ebay_signal: bool,
+    youtube_signal: bool,
+    ebay_count: int,
+    youtube_views: int,
+) -> None:
+    conn.execute(
+        """INSERT OR IGNORE INTO trends_discovery_candidates
+           (term, date, ebay_signal, youtube_signal, ebay_count, youtube_views)
+           VALUES (?, ?, ?, ?, ?, ?)""",
+        (term, date, int(ebay_signal), int(youtube_signal), ebay_count, youtube_views),
+    )
+    conn.commit()

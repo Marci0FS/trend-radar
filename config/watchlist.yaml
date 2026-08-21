@@ -72,7 +72,8 @@ thresholds:
   youtube_growth_pct: 20
 
 # Configuration du mode discovery (python cli.py discover) — detecte des
-# candidats sans mots-cles fournis a l'avance, a partir de l'activite Reddit.
+# candidats sans mots-cles fournis a l'avance, a partir de l'activite Reddit
+# et des recherches en tendance sur Google Trends.
 discovery:
   subreddits:
     # subreddits deja cibles par categorie (reutilises)

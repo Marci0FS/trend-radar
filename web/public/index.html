@@ -316,7 +316,7 @@
     function renderDiscovery(items) {
       const container = document.getElementById('discovery-container');
       if (items.length === 0) {
-        container.innerHTML = '<p class="empty">Aucun candidat detecte &mdash; le mode discovery attend l\'acces Reddit.</p>';
+        container.innerHTML = '<p class="empty">Aucun candidat detecte pour ce run.</p>';
         return;
       }
       const sorted = [...items].sort((a, b) => b.growth_pct - a.growth_pct);
