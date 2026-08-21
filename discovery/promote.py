@@ -12,13 +12,13 @@ import json
 import yaml
 
 
-def is_duplicate(yaml_text: str, phrase: str, category: str) -> bool:
+def is_duplicate(yaml_text: str, phrase: str) -> bool:
+    """Cherche `phrase` dans TOUTES les categories, pas seulement celle visee
+    par le promote en cours : un meme produit ne doit pas pouvoir se
+    retrouver promu deux fois sous deux categories differentes."""
     data = yaml.safe_load(yaml_text) or {}
     categories = data.get("categories", {})
-    cat = categories.get(category)
-    if not cat:
-        return False
-    return phrase in (cat.get("keywords") or [])
+    return any(phrase in (cat.get("keywords") or []) for cat in categories.values())
 
 
 def add_keyword_to_yaml_text(yaml_text: str, phrase: str, category: str) -> str:

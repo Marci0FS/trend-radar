@@ -12,11 +12,35 @@ from datetime import datetime, timedelta, timezone
 
 from collectors.google_trends import growth_pct
 
+# Fenetre de comparaison par source pour growth_pct. Trends recupere ~90
+# jours d'historique quotidien en un seul appel API (interest_over_time),
+# donc une fenetre de 7 jours (alignee sur `window_days`) lisse le bruit
+# jour-a-jour. eBay/AliExpress/YouTube n'ajoutent qu'UN SEUL point par
+# `scan` (un scan = un snapshot) : une fenetre de 7 jours leur imposerait
+# 14 scans reels avant tout signal non-nul (cf. growth_pct :
+# len(snapshots) < window_days*2 => 0.0), ce qui les laisserait muets
+# pendant deux semaines. window_days=1 (comparer le dernier scan au
+# precedent) est donc le choix delibere pour ces 3 sources (voir
+# docs/superpowers/specs/2026-08-18-ebay-source-design.md, section "Point
+# important - fenetre de comparaison"). Rendu configurable ici (finding #2
+# de la review Omniroute du 2026-08-22) plutot que fige en dur.
+DEFAULT_GROWTH_WINDOWS = {"ebay": 1, "aliexpress": 1, "youtube": 1}
+
 
 def compute_convergence(
-    conn: sqlite3.Connection, keyword_id: int, thresholds: dict, window_days: int = 7
+    conn: sqlite3.Connection,
+    keyword_id: int,
+    thresholds: dict,
+    window_days: int = 7,
+    growth_windows: dict | None = None,
 ) -> dict:
-    """Calcule le score de convergence pour un mot-cle sur la fenetre donnee."""
+    """Calcule le score de convergence pour un mot-cle sur la fenetre donnee.
+
+    `growth_windows` (optionnel) permet de piloter par source la fenetre de
+    comparaison passee a growth_pct (cles : trends/ebay/aliexpress/youtube).
+    `trends` vaut `window_days` par defaut (comportement historique
+    inchange) ; ebay/aliexpress/youtube valent DEFAULT_GROWTH_WINDOWS."""
+    windows = {"trends": window_days, **DEFAULT_GROWTH_WINDOWS, **(growth_windows or {})}
     now = datetime.now(timezone.utc)
     window_start = (now - timedelta(days=window_days)).isoformat()
     window_end = now.isoformat()
@@ -28,7 +52,7 @@ def compute_convergence(
         (keyword_id,),
     ).fetchall()
     trends_snapshots = [(r["date"], r["interest_score"]) for r in trends_rows]
-    trends_growth = growth_pct(trends_snapshots, window_days=window_days)
+    trends_growth = growth_pct(trends_snapshots, window_days=windows["trends"])
     signals_detected["google_trends"] = trends_growth >= thresholds["trends_growth_pct"]
 
     reddit_rows = conn.execute(
@@ -47,7 +71,7 @@ def compute_convergence(
         (keyword_id,),
     ).fetchall()
     ebay_snapshots = [(r["date"], r["listing_count"]) for r in ebay_rows]
-    ebay_growth = growth_pct(ebay_snapshots, window_days=1)
+    ebay_growth = growth_pct(ebay_snapshots, window_days=windows["ebay"])
     signals_detected["ebay"] = ebay_growth >= thresholds["ebay_growth_pct"]
 
     aliexpress_rows = conn.execute(
@@ -55,7 +79,7 @@ def compute_convergence(
         (keyword_id,),
     ).fetchall()
     aliexpress_snapshots = [(r["date"], r["sales_volume"]) for r in aliexpress_rows]
-    aliexpress_growth = growth_pct(aliexpress_snapshots, window_days=1)
+    aliexpress_growth = growth_pct(aliexpress_snapshots, window_days=windows["aliexpress"])
     signals_detected["aliexpress"] = aliexpress_growth >= thresholds["aliexpress_growth_pct"]
 
     youtube_rows = conn.execute(
@@ -63,7 +87,7 @@ def compute_convergence(
         (keyword_id,),
     ).fetchall()
     youtube_snapshots = [(r["date"], r["view_count"]) for r in youtube_rows]
-    youtube_growth = growth_pct(youtube_snapshots, window_days=1)
+    youtube_growth = growth_pct(youtube_snapshots, window_days=windows["youtube"])
     signals_detected["youtube"] = youtube_growth >= thresholds["youtube_growth_pct"]
 
     sources_count = sum(1 for v in signals_detected.values() if v)

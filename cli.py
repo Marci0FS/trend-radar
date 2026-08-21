@@ -69,6 +69,7 @@ def cmd_scan(watchlist: dict, publish_after: bool = False) -> None:
     db.init_db()
     conn = db.get_connection()
     thresholds = watchlist["thresholds"]
+    growth_windows = watchlist.get("growth_window_days", {})
     results = []
 
     try:
@@ -165,7 +166,7 @@ def cmd_scan(watchlist: dict, publish_after: bool = False) -> None:
                 except youtube.YouTubeError as exc:
                     print(f"  Echec YouTube pour '{keyword}', continue sans ce signal : {exc}")
 
-            result = compute_convergence(conn, keyword_id, thresholds)
+            result = compute_convergence(conn, keyword_id, thresholds, growth_windows=growth_windows)
             db.insert_signal(
                 conn,
                 keyword_id=result["keyword_id"],
@@ -310,8 +311,8 @@ def cmd_discover(watchlist: dict, publish_after: bool = False) -> None:
 def cmd_promote(phrase: str, category: str) -> None:
     """Ajoute un candidat discovery a la watchlist, sous la categorie donnee."""
     yaml_text = WATCHLIST_PATH.read_text()
-    if promote.is_duplicate(yaml_text, phrase, category):
-        print(f"'{phrase}' est deja dans la categorie '{category}', rien a faire")
+    if promote.is_duplicate(yaml_text, phrase):
+        print(f"'{phrase}' est deja dans la watchlist (categorie '{category}' ou une autre), rien a faire")
         return
     updated = promote.add_keyword_to_yaml_text(yaml_text, phrase, category)
 

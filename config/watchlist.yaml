@@ -71,6 +71,17 @@ thresholds:
   aliexpress_growth_pct: 20
   youtube_growth_pct: 20
 
+# Fenetre de comparaison (en jours) passee a growth_pct, par source. Trends
+# recupere ~90 jours d'historique en un seul appel API (donc une fenetre de
+# 7 jours lisse le bruit) ; eBay/AliExpress/YouTube n'ajoutent qu'un seul
+# point par scan (comparer le dernier scan au precedent = window_days: 1).
+# Valeurs identiques au comportement historique fige en dur dans le code —
+# ajustable ici sans toucher scoring/convergence.py.
+growth_window_days:
+  ebay: 1
+  aliexpress: 1
+  youtube: 1
+
 # Configuration du mode discovery (python cli.py discover) — detecte des
 # candidats sans mots-cles fournis a l'avance, a partir de l'activite Reddit
 # et des recherches en tendance sur Google Trends.

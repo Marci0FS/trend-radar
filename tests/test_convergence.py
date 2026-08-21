@@ -55,6 +55,38 @@ def test_compute_convergence_ebay_below_threshold_not_counted(tmp_path, monkeypa
     conn.close()
 
 
+def test_compute_convergence_default_growth_windows_match_historical_hardcoded_values(tmp_path, monkeypatch):
+    """Trends=7j, eBay/AliExpress/YouTube=1j par defaut, meme sans passer
+    growth_windows explicitement : aucun changement de comportement pour
+    les appelants existants (cli.py sans mise a jour, anciens tests)."""
+    conn = _make_conn(tmp_path, monkeypatch)
+    kid = db.get_or_create_keyword(conn, "produit tendance", "test")
+    db.insert_ebay_snapshot(conn, kid, "2026-08-13", 100, "EBAY_FR")
+    db.insert_ebay_snapshot(conn, kid, "2026-08-14", 200, "EBAY_FR")
+    result = compute_convergence(conn, kid, THRESHOLDS)
+    assert result["details"]["signals_detected"]["ebay"] is True
+    conn.close()
+
+
+def test_compute_convergence_growth_windows_are_configurable_per_source(tmp_path, monkeypatch):
+    """La fenetre de comparaison par source doit etre pilotable via le
+    parametre growth_windows, pas figee en dur dans le code (finding #2
+    de la review Omniroute du 2026-08-22)."""
+    conn = _make_conn(tmp_path, monkeypatch)
+    kid = db.get_or_create_keyword(conn, "produit tendance", "test")
+    # Seulement 2 snapshots eBay : suffisant pour window_days=1 (defaut),
+    # insuffisant pour window_days=7 (il en faudrait 14, growth_pct renvoie
+    # alors 0.0 faute d'historique).
+    db.insert_ebay_snapshot(conn, kid, "2026-08-13", 100, "EBAY_FR")
+    db.insert_ebay_snapshot(conn, kid, "2026-08-14", 200, "EBAY_FR")
+
+    result = compute_convergence(conn, kid, THRESHOLDS, growth_windows={"ebay": 7})
+
+    assert result["details"]["ebay_growth_pct"] == 0.0
+    assert result["details"]["signals_detected"]["ebay"] is False
+    conn.close()
+
+
 def test_compute_convergence_aliexpress_growth_detected(tmp_path, monkeypatch):
     conn = _make_conn(tmp_path, monkeypatch)
     kid = db.get_or_create_keyword(conn, "produit aliexpress", "test")
