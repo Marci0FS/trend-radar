@@ -195,7 +195,7 @@
   ],
   "discovery": [
     {
-      "phrase": "chaleur",
+      "phrase": "gui de chauliac",
       "source": "google_trends",
       "mention_count": 0,
       "growth_pct": 0,
@@ -203,61 +203,69 @@
       "youtube_signal": false
     },
     {
-      "phrase": "world rugby",
+      "phrase": "victor belmondo le rouge et le noir",
       "source": "google_trends",
       "mention_count": 0,
       "growth_pct": 0,
-      "ebay_signal": true,
-      "youtube_signal": false
+      "ebay_signal": false,
+      "youtube_signal": true
     },
     {
-      "phrase": "meteo tours",
+      "phrase": "éducation",
       "source": "google_trends",
       "mention_count": 0,
       "growth_pct": 0,
       "ebay_signal": true,
-      "youtube_signal": false
+      "youtube_signal": true
     },
     {
-      "phrase": "équipe d'argentine de football",
+      "phrase": "badminton",
       "source": "google_trends",
       "mention_count": 0,
       "growth_pct": 0,
       "ebay_signal": true,
-      "youtube_signal": false
+      "youtube_signal": true
     },
     {
-      "phrase": "marseille – strasbourg",
+      "phrase": "22 août",
       "source": "google_trends",
       "mention_count": 0,
       "growth_pct": 0,
       "ebay_signal": true,
-      "youtube_signal": false
+      "youtube_signal": true
     },
     {
-      "phrase": "malick fofana",
+      "phrase": "kimi antonelli",
       "source": "google_trends",
       "mention_count": 0,
       "growth_pct": 0,
       "ebay_signal": true,
-      "youtube_signal": false
+      "youtube_signal": true
     },
     {
-      "phrase": "stade montois rugby",
+      "phrase": "lfi",
       "source": "google_trends",
       "mention_count": 0,
       "growth_pct": 0,
       "ebay_signal": true,
-      "youtube_signal": false
+      "youtube_signal": true
     },
     {
-      "phrase": "émirats arabes unis",
+      "phrase": "xrp",
       "source": "google_trends",
       "mention_count": 0,
       "growth_pct": 0,
       "ebay_signal": true,
-      "youtube_signal": false
+      "youtube_signal": true
+    },
+    {
+      "phrase": "yacine titraoui",
+      "source": "google_trends",
+      "mention_count": 0,
+      "growth_pct": 0,
+      "ebay_signal": true,
+      "youtube_signal": true
     }
   ],
-  "last_updated": "2026-08-22T07:42:15.598894+00:00"
+  "last_updated": "2026-08-22T07:42:30.544110+00:00"
 }
