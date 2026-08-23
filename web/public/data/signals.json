@@ -5,7 +5,7 @@
       "category": "gadgets",
       "convergence_score": 21.49,
       "sources_count": 1,
-      "trends_growth_pct": 0.0,
+      "trends_growth_pct": -6.0,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
       "ebay_growth_pct": -0.8,
@@ -267,5 +267,5 @@
       "youtube_signal": true
     }
   ],
-  "last_updated": "2026-08-23T18:37:26.856271+00:00"
+  "last_updated": "2026-08-23T23:18:28.501953+00:00"
 }
