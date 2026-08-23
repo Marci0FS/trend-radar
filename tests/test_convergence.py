@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+
 from storage import db
 from scoring.convergence import compute_convergence
 
@@ -15,6 +17,14 @@ def _make_conn(tmp_path, monkeypatch):
     monkeypatch.setattr(db, "DB_PATH", tmp_path / "test.db")
     db.init_db()
     return db.get_connection()
+
+
+def _recent_utc() -> str:
+    """Horodatage a l'interieur de la fenetre glissante de 7 jours de
+    compute_convergence, quelle que soit la date d'execution du test
+    (contrairement a une date codee en dur, qui finit par sortir de la
+    fenetre au fil du temps reel)."""
+    return (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
 
 
 def test_compute_convergence_zero_sources(tmp_path, monkeypatch):
@@ -141,7 +151,7 @@ def test_compute_convergence_all_four_sources_agree(tmp_path, monkeypatch):
     db.insert_reddit_posts(conn, kid, [
         {
             "post_id": f"p{i}", "subreddit": "test", "title": "t", "score": 50,
-            "num_comments": 1, "created_utc": "2026-08-14T00:00:00+00:00", "url": "https://x",
+            "num_comments": 1, "created_utc": _recent_utc(), "url": "https://x",
         }
         for i in range(5)
     ])
@@ -173,6 +183,29 @@ def test_compute_convergence_youtube_below_threshold_not_counted(tmp_path, monke
     conn.close()
 
 
+def test_compute_convergence_reddit_post_outside_window_not_counted(tmp_path, monkeypatch):
+    """Regression : un post juste hors de la fenetre glissante de 7 jours
+    (8 jours dans le passe) ne doit jamais compter dans reddit_count,
+    contrairement a une date codee en dur qui finit par sortir de la
+    fenetre au fil du temps reel sans que le test le detecte."""
+    conn = _make_conn(tmp_path, monkeypatch)
+    kid = db.get_or_create_keyword(conn, "produit reddit perime", "test")
+    old_utc = (datetime.now(timezone.utc) - timedelta(days=8)).isoformat()
+    db.insert_reddit_posts(conn, kid, [
+        {
+            "post_id": f"p{i}", "subreddit": "test", "title": "t", "score": 50,
+            "num_comments": 1, "created_utc": old_utc, "url": "https://x",
+        }
+        for i in range(5)
+    ])
+
+    result = compute_convergence(conn, kid, THRESHOLDS)
+
+    assert result["details"]["reddit_post_count"] == 0
+    assert result["details"]["signals_detected"]["reddit"] is False
+    conn.close()
+
+
 def test_compute_convergence_all_five_sources_agree(tmp_path, monkeypatch):
     conn = _make_conn(tmp_path, monkeypatch)
     kid = db.get_or_create_keyword(conn, "produit cinq signaux", "test")
@@ -188,7 +221,7 @@ def test_compute_convergence_all_five_sources_agree(tmp_path, monkeypatch):
     db.insert_reddit_posts(conn, kid, [
         {
             "post_id": f"p{i}", "subreddit": "test", "title": "t", "score": 50,
-            "num_comments": 1, "created_utc": "2026-08-14T00:00:00+00:00", "url": "https://x",
+            "num_comments": 1, "created_utc": _recent_utc(), "url": "https://x",
         }
         for i in range(5)
     ])

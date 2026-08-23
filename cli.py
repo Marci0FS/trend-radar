@@ -368,8 +368,14 @@ def write_discovery_report(candidates: list[dict]) -> None:
         source = c.get("source", "reddit")
         lines.append(f"## {c['phrase']} ({source})")
         if source == "google_trends":
-            lines.append(f"- Signal eBay : {'oui' if c.get('ebay_signal') else 'non'}")
-            lines.append(f"- Signal YouTube : {'oui' if c.get('youtube_signal') else 'non'}")
+            lines.append(
+                f"- Signal eBay : {'oui' if c.get('ebay_signal') else 'non'} "
+                f"({c.get('ebay_count', 0)} annonces)"
+            )
+            lines.append(
+                f"- Signal YouTube : {'oui' if c.get('youtube_signal') else 'non'} "
+                f"({c.get('youtube_views', 0)} vues)"
+            )
         else:
             lines.append(f"- Mentions cette fenetre : {c['mention_count']}")
             lines.append(f"- Croissance : {c['growth_pct']}%")

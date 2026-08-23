@@ -370,3 +370,31 @@ def test_cmd_discover_one_trending_term_failure_does_not_lose_reddit_candidates(
     data = json.loads((tmp_path / "signals.json").read_text())
     phrases = [c["phrase"] for c in data["discovery"]]
     assert "led face mask" in phrases
+
+
+def test_write_discovery_report_shows_raw_ebay_youtube_counts(tmp_path, monkeypatch):
+    """Le rapport n'affichait jusqu'ici que 'oui/non' pour les signaux
+    eBay/YouTube d'un candidat google_trends, alors que les comptes bruts
+    (deja calcules par discovery/trends_scan.py) permettent un tri humain
+    bien plus rapide avant `promote` : ex. distinguer un terme generique
+    ('chaleur', ebay_count=81385) d'un vrai produit de niche (ebay_count=2)
+    est impossible avec juste 'oui'/'oui'."""
+    monkeypatch.setattr(cli, "DISCOVERY_REPORT_PATH", tmp_path / "discovery_report.md")
+
+    candidate = {
+        "phrase": "gui de chauliac",
+        "source": "google_trends",
+        "mention_count": 0,
+        "growth_pct": 0,
+        "ebay_signal": True,
+        "youtube_signal": False,
+        "ebay_count": 2,
+        "youtube_views": 0,
+    }
+
+    cli.write_discovery_report([candidate])
+
+    text = cli.DISCOVERY_REPORT_PATH.read_text()
+    assert "ebay_count" not in text  # nom de champ interne, pas la sortie attendue
+    assert "2" in text
+    assert "annonces" in text or "listing" in text.lower()
