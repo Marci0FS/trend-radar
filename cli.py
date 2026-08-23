@@ -166,7 +166,17 @@ def cmd_scan(watchlist: dict, publish_after: bool = False) -> None:
                 except youtube.YouTubeError as exc:
                     print(f"  Echec YouTube pour '{keyword}', continue sans ce signal : {exc}")
 
-            result = compute_convergence(conn, keyword_id, thresholds, growth_windows=growth_windows)
+            source_availability = {
+                "reddit": reddit_client is not None,
+                "ebay": ebay_available,
+                "aliexpress": aliexpress_available,
+                "youtube": youtube_available,
+            }
+            result = compute_convergence(
+                conn, keyword_id, thresholds,
+                growth_windows=growth_windows,
+                source_availability=source_availability,
+            )
             db.insert_signal(
                 conn,
                 keyword_id=result["keyword_id"],
@@ -335,6 +345,19 @@ def cmd_promote(phrase: str, category: str) -> None:
     print(f"'{phrase}' ajoute a la categorie '{category}' dans {WATCHLIST_PATH}")
 
 
+_STATE_SUFFIX = {
+    "unavailable": " [indisponible : credentials manquantes]",
+    "no_data": " [pas assez de donnees]",
+}
+
+
+def _report_suffix(source_states: dict, source: str) -> str:
+    """0.0% de croissance affiche sans nuance confondrait 'donnee reelle
+    stagnante' avec 'source desactivee' ou 'historique encore trop court' :
+    ce suffixe rend la difference visible dans data/report.md."""
+    return _STATE_SUFFIX.get(source_states.get(source, ""), "")
+
+
 def write_report(results: list[dict]) -> None:
     """Genere un rapport Markdown trie par force de convergence."""
     results_sorted = sorted(results, key=lambda r: r["convergence_score"], reverse=True)
@@ -345,11 +368,12 @@ def write_report(results: list[dict]) -> None:
         lines.append(f"- Score convergence : **{r['convergence_score']}**")
         lines.append(f"- Sources en accord : {r['sources_count']}/5")
         d = r["details"]
-        lines.append(f"- Google Trends : {d['trends_growth_pct']}% de croissance")
-        lines.append(f"- Reddit : {d['reddit_post_count']} posts, score moyen {d['reddit_avg_score']}")
-        lines.append(f"- eBay : {d['ebay_growth_pct']}% de croissance")
-        lines.append(f"- AliExpress : {d['aliexpress_growth_pct']}% de croissance")
-        lines.append(f"- YouTube : {d['youtube_growth_pct']}% de croissance")
+        states = d.get("source_states", {})
+        lines.append(f"- Google Trends : {d['trends_growth_pct']}% de croissance{_report_suffix(states, 'google_trends')}")
+        lines.append(f"- Reddit : {d['reddit_post_count']} posts, score moyen {d['reddit_avg_score']}{_report_suffix(states, 'reddit')}")
+        lines.append(f"- eBay : {d['ebay_growth_pct']}% de croissance{_report_suffix(states, 'ebay')}")
+        lines.append(f"- AliExpress : {d['aliexpress_growth_pct']}% de croissance{_report_suffix(states, 'aliexpress')}")
+        lines.append(f"- YouTube : {d['youtube_growth_pct']}% de croissance{_report_suffix(states, 'youtube')}")
         lines.append("")
     REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
     REPORT_PATH.write_text("\n".join(lines), encoding="utf-8")

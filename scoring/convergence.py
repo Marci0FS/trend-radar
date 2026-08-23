@@ -33,14 +33,23 @@ def compute_convergence(
     thresholds: dict,
     window_days: int = 7,
     growth_windows: dict | None = None,
+    source_availability: dict | None = None,
 ) -> dict:
     """Calcule le score de convergence pour un mot-cle sur la fenetre donnee.
 
     `growth_windows` (optionnel) permet de piloter par source la fenetre de
     comparaison passee a growth_pct (cles : trends/ebay/aliexpress/youtube).
     `trends` vaut `window_days` par defaut (comportement historique
-    inchange) ; ebay/aliexpress/youtube valent DEFAULT_GROWTH_WINDOWS."""
+    inchange) ; ebay/aliexpress/youtube valent DEFAULT_GROWTH_WINDOWS.
+
+    `source_availability` (optionnel, cles parmi google_trends/reddit/
+    ebay/aliexpress/youtube) : marque une source comme desactivee faute de
+    credentials (`cmd_scan` le sait deja, `compute_convergence` ne peut pas
+    le deviner depuis la seule DB). Absente d'une cle => source consideree
+    disponible, comportement identique a avant l'ajout de ce parametre."""
     windows = {"trends": window_days, **DEFAULT_GROWTH_WINDOWS, **(growth_windows or {})}
+    availability = {"google_trends": True, "reddit": True, "ebay": True, "aliexpress": True, "youtube": True}
+    availability.update(source_availability or {})
     now = datetime.now(timezone.utc)
     window_start = (now - timedelta(days=window_days)).isoformat()
     window_end = now.isoformat()
@@ -56,11 +65,12 @@ def compute_convergence(
     signals_detected["google_trends"] = trends_growth >= thresholds["trends_growth_pct"]
 
     reddit_rows = conn.execute(
-        "SELECT score FROM reddit_signals WHERE keyword_id = ? AND created_utc >= ?",
+        "SELECT score, created_utc FROM reddit_signals WHERE keyword_id = ? AND created_utc >= ? ORDER BY created_utc",
         (keyword_id, window_start),
     ).fetchall()
     reddit_count = len(reddit_rows)
     reddit_avg_score = sum(r["score"] for r in reddit_rows) / reddit_count if reddit_count else 0
+    reddit_last_date = reddit_rows[-1]["created_utc"][:10] if reddit_rows else None
     signals_detected["reddit"] = (
         reddit_count >= thresholds["reddit_min_posts"]
         and reddit_avg_score >= thresholds["reddit_min_avg_score"]
@@ -90,6 +100,28 @@ def compute_convergence(
     youtube_growth = growth_pct(youtube_snapshots, window_days=windows["youtube"])
     signals_detected["youtube"] = youtube_growth >= thresholds["youtube_growth_pct"]
 
+    def _state(source: str, has_data: bool) -> str:
+        if not availability[source]:
+            return "unavailable"
+        if not has_data:
+            return "no_data"
+        return "positive" if signals_detected[source] else "neutral"
+
+    source_states = {
+        "google_trends": _state("google_trends", len(trends_snapshots) >= windows["trends"] * 2),
+        "reddit": _state("reddit", reddit_count > 0),
+        "ebay": _state("ebay", len(ebay_snapshots) >= windows["ebay"] * 2),
+        "aliexpress": _state("aliexpress", len(aliexpress_snapshots) >= windows["aliexpress"] * 2),
+        "youtube": _state("youtube", len(youtube_snapshots) >= windows["youtube"] * 2),
+    }
+    source_freshness = {
+        "google_trends": trends_snapshots[-1][0] if trends_snapshots else None,
+        "reddit": reddit_last_date,
+        "ebay": ebay_snapshots[-1][0] if ebay_snapshots else None,
+        "aliexpress": aliexpress_snapshots[-1][0] if aliexpress_snapshots else None,
+        "youtube": youtube_snapshots[-1][0] if youtube_snapshots else None,
+    }
+
     sources_count = sum(1 for v in signals_detected.values() if v)
     # Score = 10 points par source en convergence + bonus intensite (croissance trends, volume reddit, croissance eBay, croissance AliExpress, croissance YouTube)
     convergence_score = (
@@ -115,5 +147,7 @@ def compute_convergence(
             "aliexpress_growth_pct": round(aliexpress_growth, 1),
             "youtube_growth_pct": round(youtube_growth, 1),
             "signals_detected": signals_detected,
+            "source_states": source_states,
+            "source_freshness": source_freshness,
         },
     }

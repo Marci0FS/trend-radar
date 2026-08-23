@@ -230,3 +230,85 @@ def test_compute_convergence_all_five_sources_agree(tmp_path, monkeypatch):
 
     assert result["sources_count"] == 5
     conn.close()
+
+
+def test_compute_convergence_source_states_default_no_data_when_zero_rows(tmp_path, monkeypatch):
+    """Sans donnee du tout (0 lignes), l'etat doit etre 'no_data', distinct
+    de 'neutral' (donnee presente mais sous seuil) et de 'unavailable'
+    (source desactivee faute de credentials)."""
+    conn = _make_conn(tmp_path, monkeypatch)
+    kid = db.get_or_create_keyword(conn, "produit calme", "test")
+    result = compute_convergence(conn, kid, THRESHOLDS)
+    states = result["details"]["source_states"]
+    assert states["reddit"] == "no_data"
+    assert states["ebay"] == "no_data"
+    assert states["aliexpress"] == "no_data"
+    assert states["youtube"] == "no_data"
+    assert states["google_trends"] == "no_data"
+    conn.close()
+
+
+def test_compute_convergence_source_states_neutral_below_threshold(tmp_path, monkeypatch):
+    conn = _make_conn(tmp_path, monkeypatch)
+    kid = db.get_or_create_keyword(conn, "produit stable ebay", "test")
+    db.insert_ebay_snapshot(conn, kid, "2026-08-13", 100, "EBAY_FR")
+    db.insert_ebay_snapshot(conn, kid, "2026-08-14", 105, "EBAY_FR")
+    result = compute_convergence(conn, kid, THRESHOLDS)
+    assert result["details"]["source_states"]["ebay"] == "neutral"
+    conn.close()
+
+
+def test_compute_convergence_source_states_positive_above_threshold(tmp_path, monkeypatch):
+    conn = _make_conn(tmp_path, monkeypatch)
+    kid = db.get_or_create_keyword(conn, "produit ebay chaud", "test")
+    db.insert_ebay_snapshot(conn, kid, "2026-08-13", 100, "EBAY_FR")
+    db.insert_ebay_snapshot(conn, kid, "2026-08-14", 200, "EBAY_FR")
+    result = compute_convergence(conn, kid, THRESHOLDS)
+    assert result["details"]["source_states"]["ebay"] == "positive"
+    conn.close()
+
+
+def test_compute_convergence_source_states_unavailable_overrides_data(tmp_path, monkeypatch):
+    """source_availability=False doit primer sur tout contenu DB residuel
+    (ex: credentials revoquees apres avoir eu des donnees par le passe)."""
+    conn = _make_conn(tmp_path, monkeypatch)
+    kid = db.get_or_create_keyword(conn, "produit reddit bloque", "test")
+    db.insert_reddit_posts(conn, kid, [
+        {
+            "post_id": "p1", "subreddit": "test", "title": "t", "score": 999,
+            "num_comments": 1, "created_utc": _recent_utc(), "url": "https://x",
+        }
+    ])
+    result = compute_convergence(
+        conn, kid, THRESHOLDS, source_availability={"reddit": False}
+    )
+    assert result["details"]["source_states"]["reddit"] == "unavailable"
+    conn.close()
+
+
+def test_compute_convergence_source_availability_default_all_available(tmp_path, monkeypatch):
+    """Sans source_availability (comportement existant, non modifie) :
+    jamais d'etat 'unavailable', comportement identique a avant l'ajout."""
+    conn = _make_conn(tmp_path, monkeypatch)
+    kid = db.get_or_create_keyword(conn, "produit calme deux", "test")
+    result = compute_convergence(conn, kid, THRESHOLDS)
+    assert "unavailable" not in result["details"]["source_states"].values()
+    conn.close()
+
+
+def test_compute_convergence_source_freshness_reports_last_snapshot_date(tmp_path, monkeypatch):
+    conn = _make_conn(tmp_path, monkeypatch)
+    kid = db.get_or_create_keyword(conn, "produit frais", "test")
+    db.insert_ebay_snapshot(conn, kid, "2026-08-13", 100, "EBAY_FR")
+    db.insert_ebay_snapshot(conn, kid, "2026-08-14", 200, "EBAY_FR")
+    result = compute_convergence(conn, kid, THRESHOLDS)
+    assert result["details"]["source_freshness"]["ebay"] == "2026-08-14"
+    conn.close()
+
+
+def test_compute_convergence_source_freshness_none_when_no_data(tmp_path, monkeypatch):
+    conn = _make_conn(tmp_path, monkeypatch)
+    kid = db.get_or_create_keyword(conn, "produit sans donnee", "test")
+    result = compute_convergence(conn, kid, THRESHOLDS)
+    assert result["details"]["source_freshness"]["ebay"] is None
+    conn.close()
