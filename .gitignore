@@ -5,6 +5,9 @@ venv/
 *.egg-info/
 .env
 data/*.db
+# Exception : la base porte l'historique des snapshots, dont le scan
+# planifie (.github/workflows/daily-scan.yml) a besoin d'un run a l'autre.
+!data/trends.db
 data/*.db-journal
 data/report.md
 data/discovery_report.md
