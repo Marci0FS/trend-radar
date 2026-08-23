@@ -300,7 +300,13 @@
         container.innerHTML = '<p class="empty">Aucun resultat de balayage pour l\'instant.</p>';
         return;
       }
-      const sorted = [...items].sort((a, b) => b.convergence_score - a.convergence_score);
+      // Convergence (nombre de sources) prime sur le score brut : un signal
+      // a 1 source avec un pic de croissance ne doit pas devancer un signal
+      // a 3 sources plus modeste. convergence_score ne depart qu'a egalite
+      // de sources_count.
+      const sorted = [...items].sort((a, b) =>
+        b.sources_count - a.sources_count || b.convergence_score - a.convergence_score
+      );
       let html = '<div class="table-wrap"><table><thead><tr>' +
         '<th>Mot-cle</th><th>Categorie</th><th>Score</th><th>Sources</th><th>Trends</th><th>Reddit</th>' +
         '</tr></thead><tbody>';

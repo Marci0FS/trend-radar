@@ -312,3 +312,37 @@ def test_compute_convergence_source_freshness_none_when_no_data(tmp_path, monkey
     result = compute_convergence(conn, kid, THRESHOLDS)
     assert result["details"]["source_freshness"]["ebay"] is None
     conn.close()
+
+
+def test_compute_convergence_score_caps_extreme_growth_bonus(tmp_path, monkeypatch):
+    """Une croissance extreme partant d'une base quasi nulle (ex : 1 vue ->
+    1000 vues = +99900%) ne doit pas ecraser le score d'un vrai signal
+    multi-sources plus modeste : le bonus d'intensite par source est borne
+    (200% par defaut), seul le comptage de sources (10 pts chacune) reste
+    illimite en poids relatif."""
+    conn = _make_conn(tmp_path, monkeypatch)
+
+    kid_capped = db.get_or_create_keyword(conn, "produit pic extreme", "test")
+    db.insert_ebay_snapshot(conn, kid_capped, "2026-08-13", 100, "EBAY_FR")
+    db.insert_ebay_snapshot(conn, kid_capped, "2026-08-14", 1100, "EBAY_FR")  # +1000%
+
+    kid_normal = db.get_or_create_keyword(conn, "produit croissance normale", "test")
+    db.insert_ebay_snapshot(conn, kid_normal, "2026-08-13", 100, "EBAY_FR")
+    db.insert_ebay_snapshot(conn, kid_normal, "2026-08-14", 300, "EBAY_FR")  # +200%, deja au cap
+
+    result_extreme = compute_convergence(conn, kid_capped, THRESHOLDS)
+    result_normal = compute_convergence(conn, kid_normal, THRESHOLDS)
+
+    assert result_extreme["details"]["ebay_growth_pct"] == 1000.0  # detail brut non tronque
+    assert result_extreme["convergence_score"] == result_normal["convergence_score"]
+    conn.close()
+
+
+def test_compute_convergence_score_negative_growth_still_zero_bonus(tmp_path, monkeypatch):
+    conn = _make_conn(tmp_path, monkeypatch)
+    kid = db.get_or_create_keyword(conn, "produit en baisse", "test")
+    db.insert_ebay_snapshot(conn, kid, "2026-08-13", 100, "EBAY_FR")
+    db.insert_ebay_snapshot(conn, kid, "2026-08-14", 50, "EBAY_FR")  # -50%
+    result = compute_convergence(conn, kid, THRESHOLDS)
+    assert result["convergence_score"] == 0.0
+    conn.close()

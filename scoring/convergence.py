@@ -26,6 +26,19 @@ from collectors.google_trends import growth_pct
 # de la review Omniroute du 2026-08-22) plutot que fige en dur.
 DEFAULT_GROWTH_WINDOWS = {"ebay": 1, "aliexpress": 1, "youtube": 1}
 
+# Plafond du bonus d'intensite par source dans convergence_score. Sans
+# plafond, une croissance partant d'une base quasi nulle (1 vue -> 1000
+# vues = +99900%, cf. le clamp deja present dans growth_pct pour base=0)
+# ecrase le poids des 10 points par source en convergence et fait remonter
+# un signal a une seule source devant un vrai signal multi-sources plus
+# modeste. 200% reste un ordre de grandeur credible (le score brut, non
+# tronque, reste visible dans details.*_growth_pct).
+_GROWTH_BONUS_CAP = 200.0
+
+
+def _bounded_growth_bonus(growth_pct: float) -> float:
+    return min(max(growth_pct, 0), _GROWTH_BONUS_CAP) * 0.1
+
 
 def compute_convergence(
     conn: sqlite3.Connection,
@@ -126,11 +139,11 @@ def compute_convergence(
     # Score = 10 points par source en convergence + bonus intensite (croissance trends, volume reddit, croissance eBay, croissance AliExpress, croissance YouTube)
     convergence_score = (
         sources_count * 10
-        + max(trends_growth, 0) * 0.1
+        + _bounded_growth_bonus(trends_growth)
         + reddit_count * 0.5
-        + max(ebay_growth, 0) * 0.1
-        + max(aliexpress_growth, 0) * 0.1
-        + max(youtube_growth, 0) * 0.1
+        + _bounded_growth_bonus(ebay_growth)
+        + _bounded_growth_bonus(aliexpress_growth)
+        + _bounded_growth_bonus(youtube_growth)
     )
 
     return {
