@@ -195,15 +195,47 @@
   ],
   "discovery": [
     {
-      "phrase": "gui de chauliac",
+      "phrase": "aéroport marseille provence",
       "source": "google_trends",
       "mention_count": 0,
       "growth_pct": 0,
       "ebay_signal": true,
-      "youtube_signal": false
+      "youtube_signal": true
     },
     {
-      "phrase": "victor belmondo le rouge et le noir",
+      "phrase": "maluma",
+      "source": "google_trends",
+      "mention_count": 0,
+      "growth_pct": 0,
+      "ebay_signal": true,
+      "youtube_signal": true
+    },
+    {
+      "phrase": "masters de pétanque",
+      "source": "google_trends",
+      "mention_count": 0,
+      "growth_pct": 0,
+      "ebay_signal": true,
+      "youtube_signal": true
+    },
+    {
+      "phrase": "telefoot",
+      "source": "google_trends",
+      "mention_count": 0,
+      "growth_pct": 0,
+      "ebay_signal": true,
+      "youtube_signal": true
+    },
+    {
+      "phrase": "christophe laporte",
+      "source": "google_trends",
+      "mention_count": 0,
+      "growth_pct": 0,
+      "ebay_signal": true,
+      "youtube_signal": true
+    },
+    {
+      "phrase": "patrouille de france cabourg",
       "source": "google_trends",
       "mention_count": 0,
       "growth_pct": 0,
@@ -211,7 +243,7 @@
       "youtube_signal": true
     },
     {
-      "phrase": "éducation",
+      "phrase": "économie",
       "source": "google_trends",
       "mention_count": 0,
       "growth_pct": 0,
@@ -219,7 +251,7 @@
       "youtube_signal": true
     },
     {
-      "phrase": "badminton",
+      "phrase": "om mercato",
       "source": "google_trends",
       "mention_count": 0,
       "growth_pct": 0,
@@ -227,39 +259,7 @@
       "youtube_signal": true
     },
     {
-      "phrase": "22 août",
-      "source": "google_trends",
-      "mention_count": 0,
-      "growth_pct": 0,
-      "ebay_signal": true,
-      "youtube_signal": true
-    },
-    {
-      "phrase": "kimi antonelli",
-      "source": "google_trends",
-      "mention_count": 0,
-      "growth_pct": 0,
-      "ebay_signal": true,
-      "youtube_signal": true
-    },
-    {
-      "phrase": "lfi",
-      "source": "google_trends",
-      "mention_count": 0,
-      "growth_pct": 0,
-      "ebay_signal": true,
-      "youtube_signal": true
-    },
-    {
-      "phrase": "xrp",
-      "source": "google_trends",
-      "mention_count": 0,
-      "growth_pct": 0,
-      "ebay_signal": true,
-      "youtube_signal": true
-    },
-    {
-      "phrase": "yacine titraoui",
+      "phrase": "lac du bouchet",
       "source": "google_trends",
       "mention_count": 0,
       "growth_pct": 0,
@@ -267,5 +267,5 @@
       "youtube_signal": true
     }
   ],
-  "last_updated": "2026-08-22T07:42:30.544110+00:00"
+  "last_updated": "2026-08-23T07:53:47.418645+00:00"
 }
