@@ -25,8 +25,31 @@ def get_connection() -> sqlite3.Connection:
 def init_db() -> None:
     conn = get_connection()
     conn.executescript(SCHEMA_PATH.read_text())
-    conn.commit()
+    # CREATE TABLE IF NOT EXISTS (schema.sql) n'altere jamais une table
+    # deja existante : une base creee avant l'ajout d'une colonne (ex.
+    # data/trends.db en production, cf. PR #10) doit etre migree ici.
+    # Pas de framework de migration dans ce projet (premiere colonne
+    # ajoutee a une table existante) : ALTER TABLE + capture de l'erreur
+    # "duplicate column" suffit pour rester idempotent.
+    try:
+        conn.execute("ALTER TABLE keywords ADD COLUMN promoted_at TEXT")
+        conn.commit()
+    except sqlite3.OperationalError as exc:
+        if "duplicate column" not in str(exc):
+            raise
     conn.close()
+
+
+def mark_promoted(conn: sqlite3.Connection, term: str) -> None:
+    """Enregistre la date de promotion d'un candidat discovery vers la
+    watchlist (`cli.py promote`). N'ecrase jamais une date deja posee :
+    repromouvoir par erreur ne doit pas effacer la vraie premiere date."""
+    keyword_id = get_or_create_keyword(conn, term)
+    conn.execute(
+        "UPDATE keywords SET promoted_at = COALESCE(promoted_at, datetime('now')) WHERE id = ?",
+        (keyword_id,),
+    )
+    conn.commit()
 
 
 def get_or_create_keyword(conn: sqlite3.Connection, term: str, category: str | None = None) -> int:

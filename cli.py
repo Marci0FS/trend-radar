@@ -344,6 +344,11 @@ def cmd_promote(phrase: str, category: str) -> None:
     WATCHLIST_PATH.write_text(updated)
     print(f"'{phrase}' ajoute a la categorie '{category}' dans {WATCHLIST_PATH}")
 
+    db.init_db()
+    conn = db.get_connection()
+    db.mark_promoted(conn, phrase)
+    conn.close()
+
 
 _STATE_SUFFIX = {
     "unavailable": " [indisponible : credentials manquantes]",

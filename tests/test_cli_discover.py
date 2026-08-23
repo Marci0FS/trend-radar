@@ -52,6 +52,7 @@ def test_cmd_discover_skips_without_reddit_credentials(tmp_path, monkeypatch, ca
 
 
 def test_cmd_promote_adds_keyword_to_watchlist(tmp_path, monkeypatch):
+    monkeypatch.setattr(storage_db, "DB_PATH", tmp_path / "test.db")
     watchlist_file = tmp_path / "watchlist.yaml"
     watchlist_file.write_text(
         'categories:\n'
@@ -67,6 +68,63 @@ def test_cmd_promote_adds_keyword_to_watchlist(tmp_path, monkeypatch):
 
     content = watchlist_file.read_text()
     assert '"chargeur solaire portable"' in content
+
+
+def test_cmd_promote_records_promotion_date_in_db(tmp_path, monkeypatch):
+    """Instrumentation Phase 5 : une fois promu, le mot-cle doit porter une
+    date de promotion en base, seule donnee qui permettra un jour de
+    mesurer la precision des alertes a 30/60 jours."""
+    monkeypatch.setattr(storage_db, "DB_PATH", tmp_path / "test.db")
+    watchlist_file = tmp_path / "watchlist.yaml"
+    watchlist_file.write_text(
+        'categories:\n'
+        '  gadgets:\n'
+        '    keywords:\n'
+        '      - "mini projecteur"\n'
+        '    subreddits:\n'
+        '      - gadgets\n'
+    )
+    monkeypatch.setattr(cli, "WATCHLIST_PATH", watchlist_file)
+
+    cli.cmd_promote("chargeur solaire portable", "gadgets")
+
+    conn = storage_db.get_connection()
+    row = conn.execute(
+        "SELECT promoted_at FROM keywords WHERE term = ?", ("chargeur solaire portable",)
+    ).fetchone()
+    conn.close()
+    assert row is not None
+    assert row["promoted_at"] is not None
+
+
+def test_cmd_promote_does_not_record_promotion_when_write_aborted(tmp_path, monkeypatch, capsys):
+    """Miroir du garde-fou YAML existant : si l'ecriture watchlist est
+    annulee (YAML invalide genere), la promotion n'a pas eu lieu et ne
+    doit pas non plus etre enregistree en base."""
+    monkeypatch.setattr(storage_db, "DB_PATH", tmp_path / "test.db")
+    watchlist_file = tmp_path / "watchlist.yaml"
+    watchlist_file.write_text(
+        'categories:\n'
+        '  gadgets:\n'
+        '    keywords:\n'
+        '      - "mini projecteur"\n'
+        '    subreddits:\n'
+        '      - gadgets\n'
+    )
+    monkeypatch.setattr(cli, "WATCHLIST_PATH", watchlist_file)
+    monkeypatch.setattr(
+        promote, "add_keyword_to_yaml_text", lambda text, phrase, category: "categories: [broken"
+    )
+
+    cli.cmd_promote("nouveau produit", "gadgets")
+
+    storage_db.init_db()  # cmd_promote n'a pas du l'appeler : DB jamais touchee
+    conn = storage_db.get_connection()
+    row = conn.execute(
+        "SELECT promoted_at FROM keywords WHERE term = ?", ("nouveau produit",)
+    ).fetchone()
+    conn.close()
+    assert row is None
 
 
 def test_cmd_promote_skips_duplicate(tmp_path, monkeypatch, capsys):
