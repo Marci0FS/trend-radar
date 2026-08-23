@@ -7,7 +7,15 @@ CREATE TABLE IF NOT EXISTS keywords (
     term TEXT NOT NULL UNIQUE,
     category TEXT,
     active INTEGER NOT NULL DEFAULT 1,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    -- Date de promotion discovery -> watchlist (NULL si jamais promu via
+    -- `cli.py promote`). Prepare la mesure de precision a 30/60 jours
+    -- (Phase 5 du plan de correction) : pas assez d'historique reel
+    -- aujourd'hui pour faire la mesure elle-meme, mais rien ne pourra
+    -- l'etre plus tard si cette date n'est jamais posee. CREATE TABLE IF
+    -- NOT EXISTS n'ajoute pas cette colonne a une base deja existante :
+    -- voir la migration ALTER TABLE dans storage/db.py::init_db.
+    promoted_at TEXT
 );
 
 CREATE TABLE IF NOT EXISTS google_trends_snapshots (
