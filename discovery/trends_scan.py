@@ -7,8 +7,19 @@ calcule aucune croissance, il recupere un instantane des N recherches
 les plus en tendance actuellement, puis filtre celles qui ont aussi un
 signal produit (eBay et/ou YouTube) pour ecarter l'actualite generaliste
 (celebrites, sport, meteo...) que le flux renvoie sans distinction —
-meme logique de "convergence" que le reste du projet, plutot qu'une
-couche NLP de filtrage supplementaire.
+meme logique de "convergence" que le reste du projet.
+
+Avant meme cette confirmation eBay/YouTube, un filtre semantique Claude
+(product_filter.filter_product_terms, Phase 4 du plan de correction,
+2026-08-24) ecarte les termes qui ne designent pas un produit physique
+vendable. Verifie sur les 26 candidats historiques reels : le filtre
+eBay/YouTube seul laissait passer 100% de bruit (actualite/sport/meteo),
+car un terme generique a mecaniquement plus d'annonces/vues qu'un vrai
+produit de niche — une piste NER locale avait deja ete testee et rejetee
+avant (echoue dans les deux sens sur des requetes courtes). Si l'appel
+Claude echoue (cle API manquante y compris), ce filtre se desactive
+proprement pour le run et le comportement retombe sur eBay/YouTube seuls
+(pas de blocage total de `discover`).
 
 Utilise trendspyg (fork maintenu de pytrends, flux RSS Google Trends)
 plutot que pytrends.realtime_trending_searches : ce dernier s'est avere
@@ -28,6 +39,7 @@ from trendspyg import download_google_trends_rss
 
 from collectors import ebay
 from collectors import youtube
+from discovery import product_filter
 
 _RESULTS_LIMIT = 20
 
@@ -41,10 +53,17 @@ def fetch_trending_candidates(geo: str = "FR", limit: int = _RESULTS_LIMIT) -> l
     que collectors/google_trends.py). Un echec eBay/YouTube sur UN terme
     precis (EbayError/YouTubeError/KeyError pour credentials manquantes)
     exclut juste ce terme des signaux confirmes pour cette source, ne
-    fait jamais planter le reste de la fonction."""
-    terms = _fetch_trending_terms(geo)
+    fait jamais planter le reste de la fonction. Un echec du filtre produit
+    Claude en amont (ProductFilterError) degrade silencieusement vers
+    l'ancien comportement (eBay/YouTube seuls, aucun terme pre-filtre)."""
+    terms = _fetch_trending_terms(geo)[:limit]
+    try:
+        terms = product_filter.filter_product_terms(terms)
+    except product_filter.ProductFilterError as exc:
+        print(f"Filtre produit Claude indisponible pour ce run, candidats non pre-filtres : {exc}")
+
     candidates = []
-    for term in terms[:limit]:
+    for term in terms:
         ebay_count = _ebay_listing_count(term)
         youtube_views = _youtube_view_count(term)
         ebay_signal = ebay_count > 0

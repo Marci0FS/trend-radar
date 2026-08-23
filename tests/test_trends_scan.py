@@ -3,11 +3,20 @@ from unittest.mock import patch
 import pytest
 
 from collectors import ebay, youtube
-from discovery import trends_scan
+from discovery import product_filter, trends_scan
 
 
 def _fake_rss_results(terms):
     return [{"trend": t} for t in terms]
+
+
+@pytest.fixture(autouse=True)
+def _bypass_product_filter(monkeypatch):
+    """Isole ces tests du filtre produit Claude (Phase 4) : ils testent la
+    confirmation eBay/YouTube, pas le filtre semantique en amont. Sans ca,
+    ils appelleraient l'API Claude reelle a chaque run (cle absente en test
+    -> echec reseau inutile, ou pire, cle presente -> appel paye reel)."""
+    monkeypatch.setattr(product_filter, "filter_product_terms", lambda terms: terms)
 
 
 def test_fetch_trending_candidates_confirms_term_with_ebay_signal(monkeypatch):
@@ -137,3 +146,51 @@ def test_fetch_trending_candidates_raises_runtime_error_on_google_trends_failure
         monkeypatch.setattr(trends_scan.time, "sleep", lambda seconds: None)
         with pytest.raises(RuntimeError):
             trends_scan.fetch_trending_candidates(geo="FR", limit=20)
+
+
+def test_fetch_trending_candidates_applies_product_filter(monkeypatch):
+    """Les termes rejetes par le filtre produit ne doivent jamais atteindre
+    eBay/YouTube : ca economise aussi le quota YouTube (100 appels/jour,
+    deja tendu, cf. memoire projet), pas seulement la precision."""
+    ebay_calls = []
+
+    def _tracking_ebay(term, **kwargs):
+        ebay_calls.append(term)
+        return 5
+
+    monkeypatch.setattr(
+        product_filter, "filter_product_terms", lambda terms: ["masque LED visage"]
+    )
+    with patch(
+        "discovery.trends_scan.download_google_trends_rss",
+        return_value=_fake_rss_results(["masque LED visage", "chaleur"]),
+    ):
+        monkeypatch.setattr(ebay, "fetch_listing_count", _tracking_ebay)
+        monkeypatch.setattr(youtube, "fetch_recent_view_count", lambda term: 0)
+
+        candidates = trends_scan.fetch_trending_candidates(geo="FR", limit=20)
+
+    assert ebay_calls == ["masque LED visage"]  # "chaleur" jamais interroge
+    assert [c["phrase"] for c in candidates] == ["masque LED visage"]
+
+
+def test_fetch_trending_candidates_degrades_when_product_filter_fails(monkeypatch):
+    """Si Claude est indisponible (cle manquante, panne API...), discover ne
+    doit pas se bloquer entierement : retombe sur l'ancien comportement
+    (eBay/YouTube seuls, aucun terme pre-filtre)."""
+
+    def _raise(terms):
+        raise product_filter.ProductFilterError("simulated failure")
+
+    monkeypatch.setattr(product_filter, "filter_product_terms", _raise)
+    with patch(
+        "discovery.trends_scan.download_google_trends_rss",
+        return_value=_fake_rss_results(["led face mask"]),
+    ):
+        monkeypatch.setattr(ebay, "fetch_listing_count", lambda term, **kwargs: 42)
+        monkeypatch.setattr(youtube, "fetch_recent_view_count", lambda term: 0)
+
+        candidates = trends_scan.fetch_trending_candidates(geo="FR", limit=20)
+
+    assert len(candidates) == 1
+    assert candidates[0]["phrase"] == "led face mask"

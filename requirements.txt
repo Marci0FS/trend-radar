@@ -6,3 +6,4 @@ spacy
 pytest
 python-dotenv
 requests
+anthropic
