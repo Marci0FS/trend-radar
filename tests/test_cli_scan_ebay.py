@@ -50,6 +50,25 @@ def test_cmd_scan_skips_ebay_when_credentials_missing(tmp_path, monkeypatch):
     assert data["watchlist"][0]["ebay_growth_pct"] == 0.0
 
 
+def test_cmd_scan_report_distinguishes_unavailable_from_neutral(tmp_path, monkeypatch):
+    """`cmd_scan` connait deja la difference entre 'credentials manquantes'
+    (unavailable) et 'donnees presentes mais sous seuil' (neutral) -- ce
+    test verifie que cette info, jusqu'ici seulement imprimee sur stdout,
+    atteint bien data/report.md pour ne pas se perdre entre deux scans."""
+    _patch_common(tmp_path, monkeypatch)
+
+    def _raise_ebay_key_error():
+        raise KeyError("EBAY_CLIENT_ID")
+
+    monkeypatch.setattr(ebay, "get_app_token", _raise_ebay_key_error)
+
+    cli.cmd_scan(_base_watchlist())
+
+    report = (tmp_path / "report.md").read_text()
+    assert "eBay" in report
+    assert "indisponible" in report.lower()
+
+
 def test_cmd_scan_continues_when_ebay_fails_for_one_keyword(tmp_path, monkeypatch):
     _patch_common(tmp_path, monkeypatch)
 
