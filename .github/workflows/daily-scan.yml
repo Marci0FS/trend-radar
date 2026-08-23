@@ -1,0 +1,64 @@
+name: Scan quotidien
+
+# 08:00 UTC = 10h a Paris en heure d'ete (CEST), 9h en heure d'hiver (CET).
+# GitHub Actions ne connait que UTC : ce decalage d'une heure l'hiver est
+# assume plutot que contourne par deux entrees cron saisonnieres.
+on:
+  schedule:
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+# Deux runs simultanes ecriraient tous les deux dans data/trends.db et le
+# second echouerait au push : on serialise.
+concurrency:
+  group: daily-scan
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      # Pas de --publish : le commit des deux fichiers (base + export) est
+      # fait explicitement plus bas, en une seule fois.
+      # Le modele spaCy n'est pas installe : il n'est charge que par
+      # `discover` (import differe dans discovery/extract.py), pas par `scan`.
+      - name: Scan
+        env:
+          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+          REDDIT_USER_AGENT: trend-radar/0.1
+          EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
+          EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
+          EBAY_ENVIRONMENT: PRODUCTION
+          ALIEXPRESS_APP_KEY: ${{ secrets.ALIEXPRESS_APP_KEY }}
+          ALIEXPRESS_APP_SECRET: ${{ secrets.ALIEXPRESS_APP_SECRET }}
+          ALIEXPRESS_REFRESH_TOKEN: ${{ secrets.ALIEXPRESS_REFRESH_TOKEN }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: python cli.py scan
+
+      # data/trends.db porte tout l'historique (compute_convergence lit les
+      # snapshots passes) : sans ce commit, chaque run repartirait d'une base
+      # vide et les scores de croissance seraient toujours nuls.
+      - name: Commit et push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/trends.db web/public/data/signals.json
+          if git diff --staged --quiet; then
+            echo "Rien a publier (aucun changement)"
+          else
+            git commit -m "chore: scan quotidien"
+            git push
+          fi
