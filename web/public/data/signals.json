@@ -3,86 +3,86 @@
     {
       "keyword": "purificateur d'air portable",
       "category": "gadgets",
-      "convergence_score": 21.49,
+      "convergence_score": 17.48,
       "sources_count": 1,
       "trends_growth_pct": -6.0,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
       "ebay_growth_pct": -1.5,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 114.9
+      "youtube_growth_pct": 74.8
     },
     {
       "keyword": "mini projecteur",
       "category": "gadgets",
-      "convergence_score": 22.59,
+      "convergence_score": 19.74,
       "sources_count": 1,
       "trends_growth_pct": -34.3,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
       "ebay_growth_pct": -1.4,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 125.9
+      "youtube_growth_pct": 97.4
     },
     {
       "keyword": "montre connectee sante",
       "category": "gadgets",
-      "convergence_score": 16.56,
-      "sources_count": 1,
+      "convergence_score": 0.54,
+      "sources_count": 0,
       "trends_growth_pct": -100.0,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
       "ebay_growth_pct": 0.0,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 65.6
+      "youtube_growth_pct": 5.4
     },
     {
       "keyword": "chargeur solaire portable",
       "category": "gadgets",
-      "convergence_score": 0.09,
-      "sources_count": 0,
+      "convergence_score": 17.01,
+      "sources_count": 1,
       "trends_growth_pct": -100.0,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
       "ebay_growth_pct": 0.9,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": -58.9
+      "youtube_growth_pct": 69.2
     },
     {
       "keyword": "masque LED visage",
       "category": "beaute",
-      "convergence_score": 0.23,
+      "convergence_score": 1.33,
       "sources_count": 0,
       "trends_growth_pct": 0.0,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
       "ebay_growth_pct": 0.0,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 2.3
+      "youtube_growth_pct": 13.3
     },
     {
       "keyword": "brosse a dents electrique sonique",
       "category": "beaute",
-      "convergence_score": 0.1,
+      "convergence_score": 0.89,
       "sources_count": 0,
       "trends_growth_pct": 1.0,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
       "ebay_growth_pct": 0.0,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": -91.8
+      "youtube_growth_pct": 7.9
     },
     {
       "keyword": "huile de ricin cheveux",
       "category": "beaute",
-      "convergence_score": 0.0,
-      "sources_count": 0,
+      "convergence_score": 12.08,
+      "sources_count": 1,
       "trends_growth_pct": -66.2,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
       "ebay_growth_pct": 0.0,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": -65.1
+      "youtube_growth_pct": 20.8
     },
     {
       "keyword": "lampe de sel himalayen",
@@ -94,79 +94,43 @@
       "reddit_avg_score": 0,
       "ebay_growth_pct": 0.0,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": -100.0
+      "youtube_growth_pct": 0.0
     },
     {
       "keyword": "diffuseur huiles essentielles",
       "category": "maison",
-      "convergence_score": 26.91,
+      "convergence_score": 27.29,
       "sources_count": 1,
       "trends_growth_pct": -69.0,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
       "ebay_growth_pct": 1.8,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 167.3
-    },
-    {
-      "keyword": "robot aspirateur laveur",
-      "category": "maison",
-      "convergence_score": 13.8,
-      "sources_count": 1,
-      "trends_growth_pct": 7.3,
-      "reddit_post_count": 0,
-      "reddit_avg_score": 0,
-      "ebay_growth_pct": -0.4,
-      "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 30.7
-    },
-    {
-      "keyword": "ceinture de sudation",
-      "category": "fitness",
-      "convergence_score": 0.0,
-      "sources_count": 0,
-      "trends_growth_pct": -100.0,
-      "reddit_post_count": 0,
-      "reddit_avg_score": 0,
-      "ebay_growth_pct": 0.0,
-      "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 0.0
+      "youtube_growth_pct": 171.1
     },
     {
       "keyword": "corde a sauter connectee",
       "category": "fitness",
-      "convergence_score": 39.84,
-      "sources_count": 2,
+      "convergence_score": 20.0,
+      "sources_count": 1,
       "trends_growth_pct": 100.0,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
       "ebay_growth_pct": 0.0,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 98.4
-    },
-    {
-      "keyword": "fontaine a eau chat",
-      "category": "animaux",
-      "convergence_score": 18.94,
-      "sources_count": 1,
-      "trends_growth_pct": -7.6,
-      "reddit_post_count": 0,
-      "reddit_avg_score": 0,
-      "ebay_growth_pct": 0.3,
-      "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 89.1
+      "youtube_growth_pct": -100.0
     },
     {
       "keyword": "GPS collier chien",
       "category": "animaux",
-      "convergence_score": 27.86,
+      "convergence_score": 29.79,
       "sources_count": 2,
       "trends_growth_pct": 26.2,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
       "ebay_growth_pct": -1.4,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 52.4
+      "youtube_growth_pct": 71.8
     },
     {
       "keyword": "veilleuse projecteur enfant",
@@ -178,7 +142,7 @@
       "reddit_avg_score": 0,
       "ebay_growth_pct": 1.8,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": -100.0
+      "youtube_growth_pct": 0.0
     },
     {
       "keyword": "tapis puzzle bebe",
@@ -267,5 +231,5 @@
       "youtube_signal": true
     }
   ],
-  "last_updated": "2026-08-24T08:52:53.395447+00:00"
+  "last_updated": "2026-08-24T09:08:10.141676+00:00"
 }
