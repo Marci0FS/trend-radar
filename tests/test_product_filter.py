@@ -25,8 +25,12 @@ class _FakeResponse:
         self.content = content
 
 
-def _fake_response(payload) -> _FakeResponse:
-    return _FakeResponse([_FakeBlock("text", json.dumps(payload, ensure_ascii=False))])
+def _fake_response(products) -> _FakeResponse:
+    """output_config.format garantit un objet JSON conforme au schema :
+    {"products": [...]}."""
+    return _FakeResponse(
+        [_FakeBlock("text", json.dumps({"products": products}, ensure_ascii=False))]
+    )
 
 
 def test_filter_product_terms_keeps_only_accepted(monkeypatch):
@@ -58,18 +62,6 @@ def test_filter_product_terms_ignores_hallucinated_terms_not_in_input(monkeypatc
     assert result == ["masque LED visage"]
 
 
-def test_filter_product_terms_strips_markdown_code_fence(monkeypatch):
-    monkeypatch.setattr(
-        product_filter,
-        "_call_claude",
-        lambda terms: _FakeResponse(
-            [_FakeBlock("text", '```json\n["masque LED visage"]\n```')]
-        ),
-    )
-    result = product_filter.filter_product_terms(["masque LED visage", "chaleur"])
-    assert result == ["masque LED visage"]
-
-
 def test_filter_product_terms_raises_on_invalid_json(monkeypatch):
     monkeypatch.setattr(
         product_filter,
@@ -80,9 +72,21 @@ def test_filter_product_terms_raises_on_invalid_json(monkeypatch):
         product_filter.filter_product_terms(["masque LED visage"])
 
 
-def test_filter_product_terms_raises_on_non_list_json(monkeypatch):
+def test_filter_product_terms_raises_when_products_key_missing(monkeypatch):
     monkeypatch.setattr(
-        product_filter, "_call_claude", lambda terms: _fake_response({"not": "a list"})
+        product_filter,
+        "_call_claude",
+        lambda terms: _FakeResponse([_FakeBlock("text", json.dumps({"autre": []}))]),
+    )
+    with pytest.raises(product_filter.ProductFilterError):
+        product_filter.filter_product_terms(["masque LED visage"])
+
+
+def test_filter_product_terms_raises_when_products_not_a_list(monkeypatch):
+    monkeypatch.setattr(
+        product_filter,
+        "_call_claude",
+        lambda terms: _FakeResponse([_FakeBlock("text", json.dumps({"products": "oups"}))]),
     )
     with pytest.raises(product_filter.ProductFilterError):
         product_filter.filter_product_terms(["masque LED visage"])

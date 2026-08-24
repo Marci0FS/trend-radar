@@ -27,11 +27,28 @@ _SYSTEM_PROMPT = (
     "emissions ou oeuvres (TV/cinema/livre), actifs financiers "
     "(crypto/bourse), noms propres d'etablissements (ecole/hopital/rue), "
     "mots abstraits generiques (economie, education...).\n\n"
-    "Reponds UNIQUEMENT avec un tableau JSON des termes retenus, copies "
-    "EXACTEMENT depuis la liste recue (aucune reformulation), sans aucun "
-    "texte, explication ou balise markdown autour. Si aucun terme ne "
-    "convient, reponds []."
+    "Renvoie les termes retenus dans le champ `products`, copies EXACTEMENT "
+    "depuis la liste recue (aucune reformulation). Si aucun terme ne "
+    "convient, renvoie une liste vide."
 )
+
+# Schema impose a la reponse (output_config.format) plutot qu'une consigne
+# de formatage en langage naturel. Un premier essai en "reponds uniquement
+# avec un tableau JSON" a produit en conditions reelles une reponse
+# invalide : guillemet typographique (”) puis auto-correction du modele
+# ("Wait — I must output exact JSON.") suivie du vrai tableau. Le schema
+# rend ce cas structurellement impossible.
+_OUTPUT_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "products": {
+            "type": "array",
+            "items": {"type": "string"},
+        }
+    },
+    "required": ["products"],
+    "additionalProperties": False,
+}
 
 
 class ProductFilterError(RuntimeError):
@@ -53,21 +70,21 @@ def filter_product_terms(terms: list[str]) -> list[str]:
         raise ProductFilterError(f"Appel Claude echoue : {exc}") from exc
 
     text = _extract_text(response).strip()
-    if text.startswith("```"):
-        text = text.split("\n", 1)[1] if "\n" in text else text
-        text = text.removeprefix("json").strip()
-        text = text.removesuffix("```").strip()
-
     try:
-        accepted = json.loads(text)
+        payload = json.loads(text)
     except json.JSONDecodeError as exc:
         raise ProductFilterError(
             f"Reponse Claude non parsable en JSON : {text[:200]!r}"
         ) from exc
 
+    accepted = payload.get("products") if isinstance(payload, dict) else None
     if not isinstance(accepted, list):
-        raise ProductFilterError(f"Reponse Claude n'est pas une liste JSON : {text[:200]!r}")
+        raise ProductFilterError(
+            f"Reponse Claude sans champ 'products' exploitable : {text[:200]!r}"
+        )
 
+    # Filtrer depuis `terms` (et non renvoyer `accepted` tel quel) preserve
+    # l'ordre d'origine ET ecarte tout terme reformule ou hallucine.
     accepted_set = set(accepted)
     return [t for t in terms if t in accepted_set]
 
@@ -78,7 +95,10 @@ def _call_claude(terms: list[str]):
         model=_MODEL,
         max_tokens=1024,
         system=_SYSTEM_PROMPT,
-        output_config={"effort": "low"},
+        output_config={
+            "effort": "low",
+            "format": {"type": "json_schema", "schema": _OUTPUT_SCHEMA},
+        },
         messages=[{"role": "user", "content": json.dumps(terms, ensure_ascii=False)}],
     )
 
