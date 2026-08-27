@@ -3,86 +3,86 @@
     {
       "keyword": "purificateur d'air portable",
       "category": "gadgets",
-      "convergence_score": 0.06,
+      "convergence_score": 0.0,
       "sources_count": 0,
       "trends_growth_pct": -100.0,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
-      "ebay_growth_pct": -4.5,
+      "ebay_growth_pct": -0.8,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 0.6
+      "youtube_growth_pct": -95.1
     },
     {
       "keyword": "mini projecteur",
       "category": "gadgets",
-      "convergence_score": 15.84,
+      "convergence_score": 18.75,
       "sources_count": 1,
-      "trends_growth_pct": 16.8,
+      "trends_growth_pct": 86.3,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
-      "ebay_growth_pct": 1.8,
+      "ebay_growth_pct": 1.2,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 39.8
+      "youtube_growth_pct": -5.6
     },
     {
       "keyword": "montre connectee sante",
       "category": "gadgets",
-      "convergence_score": 16.67,
+      "convergence_score": 12.83,
       "sources_count": 1,
       "trends_growth_pct": 0.0,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
-      "ebay_growth_pct": 66.7,
+      "ebay_growth_pct": -3.2,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": -36.0
+      "youtube_growth_pct": 28.3
     },
     {
       "keyword": "chargeur solaire portable",
       "category": "gadgets",
-      "convergence_score": 0.77,
+      "convergence_score": 0.03,
       "sources_count": 0,
       "trends_growth_pct": -100.0,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
-      "ebay_growth_pct": -1.2,
+      "ebay_growth_pct": 0.3,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 7.7
+      "youtube_growth_pct": -15.4
     },
     {
       "keyword": "masque LED visage",
       "category": "beaute",
-      "convergence_score": 1.88,
+      "convergence_score": 1.14,
       "sources_count": 0,
-      "trends_growth_pct": -21.0,
+      "trends_growth_pct": 7.7,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
-      "ebay_growth_pct": 0.0,
+      "ebay_growth_pct": 3.8,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 18.8
+      "youtube_growth_pct": -51.9
     },
     {
       "keyword": "brosse a dents electrique sonique",
       "category": "beaute",
-      "convergence_score": 0.1,
-      "sources_count": 0,
+      "convergence_score": 21.17,
+      "sources_count": 1,
       "trends_growth_pct": 1.0,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
-      "ebay_growth_pct": -0.3,
+      "ebay_growth_pct": 1.2,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": -63.8
+      "youtube_growth_pct": 109.5
     },
     {
       "keyword": "huile de ricin cheveux",
       "category": "beaute",
-      "convergence_score": 14.45,
+      "convergence_score": 25.62,
       "sources_count": 1,
-      "trends_growth_pct": -66.0,
+      "trends_growth_pct": -50.9,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
-      "ebay_growth_pct": 1.9,
+      "ebay_growth_pct": -0.7,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 42.6
+      "youtube_growth_pct": 156.2
     },
     {
       "keyword": "lampe de sel himalayen",
@@ -101,24 +101,24 @@
       "category": "maison",
       "convergence_score": 0.0,
       "sources_count": 0,
-      "trends_growth_pct": -66.0,
+      "trends_growth_pct": -53.5,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
       "ebay_growth_pct": -2.5,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": -3.0
+      "youtube_growth_pct": -15.4
     },
     {
       "keyword": "robot aspirateur laveur",
       "category": "maison",
-      "convergence_score": 1.59,
+      "convergence_score": 0.35,
       "sources_count": 0,
-      "trends_growth_pct": 3.2,
+      "trends_growth_pct": 3.5,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
-      "ebay_growth_pct": -1.5,
+      "ebay_growth_pct": -0.7,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 12.6
+      "youtube_growth_pct": -58.6
     },
     {
       "keyword": "ceinture de sudation",
@@ -128,9 +128,9 @@
       "trends_growth_pct": -100.0,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
-      "ebay_growth_pct": -2.1,
+      "ebay_growth_pct": -4.3,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": -100.0
+      "youtube_growth_pct": 0.0
     },
     {
       "keyword": "corde a sauter connectee",
@@ -147,36 +147,36 @@
     {
       "keyword": "fontaine a eau chat",
       "category": "animaux",
-      "convergence_score": 1.53,
+      "convergence_score": 0.0,
       "sources_count": 0,
-      "trends_growth_pct": -13.7,
+      "trends_growth_pct": -20.8,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
-      "ebay_growth_pct": -0.1,
+      "ebay_growth_pct": -0.2,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 15.3
+      "youtube_growth_pct": -9.8
     },
     {
       "keyword": "GPS collier chien",
       "category": "animaux",
-      "convergence_score": 17.46,
+      "convergence_score": 20.9,
       "sources_count": 1,
-      "trends_growth_pct": 55.4,
+      "trends_growth_pct": 106.2,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
-      "ebay_growth_pct": 1.4,
+      "ebay_growth_pct": 0.0,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 17.9
+      "youtube_growth_pct": 2.8
     },
     {
       "keyword": "veilleuse projecteur enfant",
       "category": "enfants",
-      "convergence_score": 0.18,
+      "convergence_score": 0.0,
       "sources_count": 0,
       "trends_growth_pct": 0.0,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
-      "ebay_growth_pct": 1.8,
+      "ebay_growth_pct": 0.0,
       "aliexpress_growth_pct": 0.0,
       "youtube_growth_pct": 0.0
     },
@@ -267,5 +267,5 @@
       "youtube_signal": true
     }
   ],
-  "last_updated": "2026-08-26T08:49:48.746491+00:00"
+  "last_updated": "2026-08-27T18:58:53.867876+00:00"
 }
