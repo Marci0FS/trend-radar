@@ -3,146 +3,182 @@
     {
       "keyword": "purificateur d'air portable",
       "category": "gadgets",
-      "convergence_score": 17.48,
-      "sources_count": 1,
+      "convergence_score": 0.0,
+      "sources_count": 0,
       "trends_growth_pct": -6.0,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
-      "ebay_growth_pct": -1.5,
+      "ebay_growth_pct": -3.9,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 74.8
+      "youtube_growth_pct": -97.1
     },
     {
       "keyword": "mini projecteur",
       "category": "gadgets",
-      "convergence_score": 19.74,
-      "sources_count": 1,
-      "trends_growth_pct": -34.3,
+      "convergence_score": 25.33,
+      "sources_count": 2,
+      "trends_growth_pct": 24.6,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
-      "ebay_growth_pct": -1.4,
+      "ebay_growth_pct": 3.9,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 97.4
+      "youtube_growth_pct": 24.8
     },
     {
       "keyword": "montre connectee sante",
       "category": "gadgets",
-      "convergence_score": 0.54,
+      "convergence_score": 2.0,
       "sources_count": 0,
-      "trends_growth_pct": -100.0,
+      "trends_growth_pct": 0.0,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
-      "ebay_growth_pct": 0.0,
+      "ebay_growth_pct": -0.4,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 5.4
+      "youtube_growth_pct": 20.0
     },
     {
       "keyword": "chargeur solaire portable",
       "category": "gadgets",
-      "convergence_score": 17.01,
+      "convergence_score": 30.06,
       "sources_count": 1,
-      "trends_growth_pct": -100.0,
+      "trends_growth_pct": 231.4,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
-      "ebay_growth_pct": 0.9,
+      "ebay_growth_pct": 0.6,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 69.2
+      "youtube_growth_pct": -4.8
     },
     {
       "keyword": "masque LED visage",
       "category": "beaute",
-      "convergence_score": 1.33,
-      "sources_count": 0,
-      "trends_growth_pct": 0.0,
+      "convergence_score": 12.62,
+      "sources_count": 1,
+      "trends_growth_pct": 22.4,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
-      "ebay_growth_pct": 0.0,
+      "ebay_growth_pct": 3.8,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 13.3
+      "youtube_growth_pct": -25.3
     },
     {
       "keyword": "brosse a dents electrique sonique",
       "category": "beaute",
-      "convergence_score": 0.89,
-      "sources_count": 0,
+      "convergence_score": 30.1,
+      "sources_count": 1,
       "trends_growth_pct": 1.0,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
-      "ebay_growth_pct": 0.0,
+      "ebay_growth_pct": -1.2,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 7.9
+      "youtube_growth_pct": 281.7
     },
     {
       "keyword": "huile de ricin cheveux",
       "category": "beaute",
-      "convergence_score": 12.08,
+      "convergence_score": 30.0,
       "sources_count": 1,
-      "trends_growth_pct": -66.2,
+      "trends_growth_pct": -49.1,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
-      "ebay_growth_pct": 0.0,
+      "ebay_growth_pct": -2.5,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 20.8
+      "youtube_growth_pct": 625.2
     },
     {
       "keyword": "lampe de sel himalayen",
       "category": "maison",
-      "convergence_score": 0.0,
+      "convergence_score": 0.77,
       "sources_count": 0,
       "trends_growth_pct": 0.0,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
-      "ebay_growth_pct": 0.0,
+      "ebay_growth_pct": 7.7,
       "aliexpress_growth_pct": 0.0,
       "youtube_growth_pct": 0.0
     },
     {
       "keyword": "diffuseur huiles essentielles",
       "category": "maison",
-      "convergence_score": 27.29,
-      "sources_count": 1,
-      "trends_growth_pct": -69.0,
+      "convergence_score": 0.0,
+      "sources_count": 0,
+      "trends_growth_pct": -2.6,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
-      "ebay_growth_pct": 1.8,
+      "ebay_growth_pct": -5.1,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 171.1
+      "youtube_growth_pct": -30.2
+    },
+    {
+      "keyword": "robot aspirateur laveur",
+      "category": "maison",
+      "convergence_score": 0.29,
+      "sources_count": 0,
+      "trends_growth_pct": 2.9,
+      "reddit_post_count": 0,
+      "reddit_avg_score": 0,
+      "ebay_growth_pct": -1.3,
+      "aliexpress_growth_pct": 0.0,
+      "youtube_growth_pct": -49.5
+    },
+    {
+      "keyword": "ceinture de sudation",
+      "category": "fitness",
+      "convergence_score": 0.88,
+      "sources_count": 0,
+      "trends_growth_pct": 8.8,
+      "reddit_post_count": 0,
+      "reddit_avg_score": 0,
+      "ebay_growth_pct": -6.4,
+      "aliexpress_growth_pct": 0.0,
+      "youtube_growth_pct": -100.0
     },
     {
       "keyword": "corde a sauter connectee",
       "category": "fitness",
-      "convergence_score": 20.0,
-      "sources_count": 1,
+      "convergence_score": 40.0,
+      "sources_count": 2,
       "trends_growth_pct": 100.0,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
       "ebay_growth_pct": 0.0,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": -100.0
+      "youtube_growth_pct": 100.0
+    },
+    {
+      "keyword": "fontaine a eau chat",
+      "category": "animaux",
+      "convergence_score": 30.0,
+      "sources_count": 1,
+      "trends_growth_pct": -31.8,
+      "reddit_post_count": 0,
+      "reddit_avg_score": 0,
+      "ebay_growth_pct": -0.2,
+      "aliexpress_growth_pct": 0.0,
+      "youtube_growth_pct": 413.8
     },
     {
       "keyword": "GPS collier chien",
       "category": "animaux",
-      "convergence_score": 29.79,
+      "convergence_score": 36.48,
       "sources_count": 2,
-      "trends_growth_pct": 26.2,
+      "trends_growth_pct": 111.5,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
-      "ebay_growth_pct": -1.4,
+      "ebay_growth_pct": 1.4,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 71.8
+      "youtube_growth_pct": 51.9
     },
     {
       "keyword": "veilleuse projecteur enfant",
       "category": "enfants",
-      "convergence_score": 0.18,
-      "sources_count": 0,
+      "convergence_score": 20.22,
+      "sources_count": 1,
       "trends_growth_pct": 0.0,
       "reddit_post_count": 0,
       "reddit_avg_score": 0,
-      "ebay_growth_pct": 1.8,
+      "ebay_growth_pct": 2.2,
       "aliexpress_growth_pct": 0.0,
-      "youtube_growth_pct": 0.0
+      "youtube_growth_pct": 100.0
     },
     {
       "keyword": "tapis puzzle bebe",
@@ -157,79 +193,6 @@
       "youtube_growth_pct": 0.0
     }
   ],
-  "discovery": [
-    {
-      "phrase": "aéroport marseille provence",
-      "source": "google_trends",
-      "mention_count": 0,
-      "growth_pct": 0,
-      "ebay_signal": true,
-      "youtube_signal": true
-    },
-    {
-      "phrase": "maluma",
-      "source": "google_trends",
-      "mention_count": 0,
-      "growth_pct": 0,
-      "ebay_signal": true,
-      "youtube_signal": true
-    },
-    {
-      "phrase": "masters de pétanque",
-      "source": "google_trends",
-      "mention_count": 0,
-      "growth_pct": 0,
-      "ebay_signal": true,
-      "youtube_signal": true
-    },
-    {
-      "phrase": "telefoot",
-      "source": "google_trends",
-      "mention_count": 0,
-      "growth_pct": 0,
-      "ebay_signal": true,
-      "youtube_signal": true
-    },
-    {
-      "phrase": "christophe laporte",
-      "source": "google_trends",
-      "mention_count": 0,
-      "growth_pct": 0,
-      "ebay_signal": true,
-      "youtube_signal": true
-    },
-    {
-      "phrase": "patrouille de france cabourg",
-      "source": "google_trends",
-      "mention_count": 0,
-      "growth_pct": 0,
-      "ebay_signal": false,
-      "youtube_signal": true
-    },
-    {
-      "phrase": "économie",
-      "source": "google_trends",
-      "mention_count": 0,
-      "growth_pct": 0,
-      "ebay_signal": true,
-      "youtube_signal": true
-    },
-    {
-      "phrase": "om mercato",
-      "source": "google_trends",
-      "mention_count": 0,
-      "growth_pct": 0,
-      "ebay_signal": true,
-      "youtube_signal": true
-    },
-    {
-      "phrase": "lac du bouchet",
-      "source": "google_trends",
-      "mention_count": 0,
-      "growth_pct": 0,
-      "ebay_signal": true,
-      "youtube_signal": true
-    }
-  ],
-  "last_updated": "2026-08-24T09:08:10.141676+00:00"
+  "discovery": [],
+  "last_updated": "2026-08-28T07:57:15.955970+00:00"
 }
