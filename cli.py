@@ -25,6 +25,7 @@ from collectors import reddit as reddit_collector
 from collectors import youtube
 from discovery import extract, promote, reddit_scan, trends_scan, velocity
 from scoring.convergence import compute_convergence
+from utils.notifications import notify_high_score
 from storage import db
 
 import publish
@@ -187,6 +188,15 @@ def cmd_scan(watchlist: dict, publish_after: bool = False) -> None:
                 details=result["details"],
             )
             results.append({"keyword": keyword, "category": category, **result})
+
+            # Envoyer une notification si le score est élevé
+            notify_high_score({
+                "keyword": keyword,
+                "category": category,
+                "keyword_id": result["keyword_id"],
+                "convergence_score": result["convergence_score"],
+                "details": result["details"],
+            })
 
     conn.close()
     write_report(results)
@@ -415,6 +425,53 @@ def write_discovery_report(candidates: list[dict]) -> None:
     print(f"Rapport discovery ecrit : {DISCOVERY_REPORT_PATH}")
 
 
+def cmd_analyze(subcommand: str, args_list: list[str]) -> None:
+    """Execute les analyses historiques (Phase 6)."""
+    from analytics import history_analysis
+
+    if subcommand == "categories":
+        categories = history_analysis.get_top_categories()
+        print("\n📊 Top Categories by Average Convergence Score:\n")
+        for i, cat in enumerate(categories, 1):
+            print(f"{i}. {cat['category']}")
+            print(f"   Avg Score: {cat['avg_score']} | Max: {cat['max_score']}")
+            print(f"   Keywords: {cat['keywords_count']} | Signals: {cat['total_signals']}\n")
+
+    elif subcommand == "timeline":
+        if not args_list:
+            print("❌ Missing term argument")
+            return
+        term = args_list[0]
+        days = int(args_list[1]) if len(args_list) > 1 else 90
+        timeline = history_analysis.get_growth_timeline(term, days)
+        print(json.dumps(timeline, indent=2, ensure_ascii=False))
+
+    elif subcommand == "seasonal":
+        category = args_list[0] if args_list else None
+        patterns = history_analysis.get_seasonal_patterns(category)
+        print(json.dumps(patterns, indent=2, ensure_ascii=False))
+
+    elif subcommand == "discovery":
+        days = int(args_list[0]) if args_list else 90
+        success = history_analysis.get_discovery_success_rate(days)
+        print(json.dumps(success, indent=2, ensure_ascii=False))
+
+    elif subcommand == "export-csv":
+        if not args_list:
+            print("❌ Missing output path argument")
+            return
+        output = args_list[0]
+        days = int(args_list[1]) if len(args_list) > 1 else 90
+        history_analysis.export_to_csv(output, days)
+
+    elif subcommand == "export-json":
+        if not args_list:
+            print("❌ Missing output path argument")
+            return
+        output = args_list[0]
+        history_analysis.export_to_json(output)
+
+
 def write_signals_json(section: str, entries: list[dict]) -> None:
     """Met a jour une section ('watchlist' ou 'discovery') de signals.json,
     en preservant l'autre section si le fichier existe deja. Tolere un
@@ -459,6 +516,14 @@ def main() -> None:
     promote_parser.add_argument("phrase")
     promote_parser.add_argument("category")
 
+    analyze_parser = sub.add_parser("analyze", help="analyse historique des tendances (Phase 6)")
+    analyze_parser.add_argument(
+        "subcommand",
+        choices=["categories", "timeline", "seasonal", "discovery", "export-csv", "export-json"],
+        help="type d'analyse a executer"
+    )
+    analyze_parser.add_argument("args", nargs="*", help="arguments specifiques au sous-commande")
+
     args = parser.parse_args()
     watchlist = load_watchlist()
 
@@ -470,6 +535,8 @@ def main() -> None:
         cmd_discover(watchlist, publish_after=args.publish)
     elif args.command == "promote":
         cmd_promote(args.phrase, args.category)
+    elif args.command == "analyze":
+        cmd_analyze(args.subcommand, args.args)
 
 
 if __name__ == "__main__":
