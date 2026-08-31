@@ -5,7 +5,7 @@ name: Scan quotidien
 # assume plutot que contourne par deux entrees cron saisonnieres.
 on:
   schedule:
-    - cron: "0 8 * * *"
+    - cron: "0 8 * * *"   # 10h Paris (CEST) / 9h (CET)
   workflow_dispatch:
 
 # Deux runs simultanes ecriraient tous les deux dans data/trends.db et le
